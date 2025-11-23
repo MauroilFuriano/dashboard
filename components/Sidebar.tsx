@@ -1,5 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, Settings, MessageCircle, Zap, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, Settings, MessageCircle, Zap, CheckCircle2, LogOut } from 'lucide-react';
+import { supabase } from '../supabase';
 import { Tab, NavigationItem } from '../types';
 
 interface SidebarProps {
@@ -17,6 +18,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
     { id: Tab.ACTIVATION, label: 'Attivazione', icon: Zap },
   ];
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -29,11 +34,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
 
       {/* Sidebar Container */}
       <aside className={`
-        fixed top-0 left-0 z-30 h-full w-72 bg-slate-900 border-r border-slate-800 shadow-xl transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 z-30 h-full w-72 bg-slate-900 border-r border-slate-800 shadow-xl transition-transform duration-300 ease-in-out flex flex-col
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static
       `}>
-        <div className="p-6 border-b border-slate-800 flex items-center space-x-3">
+        <div className="p-6 border-b border-slate-800 flex items-center space-x-3 shrink-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-900/20">
             <CheckCircle2 className="text-white w-6 h-6" />
           </div>
@@ -43,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
           </div>
         </div>
 
-        <nav className="p-4 space-y-2 mt-4">
+        <nav className="p-4 space-y-2 mt-4 flex-1">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
@@ -73,8 +78,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 w-full p-6 border-t border-slate-800 bg-slate-900/50">
-          <div className="flex items-center space-x-3 text-slate-400 text-sm">
+        {/* Bottom Section: Logout + Status */}
+        <div className="p-4 border-t border-slate-800 bg-slate-900/50 space-y-4 shrink-0">
+          
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 border border-transparent transition-all"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Esci</span>
+          </button>
+
+          <div className="flex items-center justify-center space-x-3 text-slate-500 text-xs pt-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
             <span>System Status: </span>
             <span className="text-emerald-400 font-semibold">Operational</span>

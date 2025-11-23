@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Loader2 } from 'lucide-react';
+import { supabase } from './supabase';
 import Sidebar from './components/Sidebar';
 import Welcome from './components/Welcome';
 import ExchangeConfig from './components/ExchangeConfig';
 import TelegramConfig from './components/TelegramConfig';
 import ActivationForm from './components/ActivationForm';
+import Login from './components/Login';
+import Register from './components/Register';
 import { Tab } from './types';
 
 const App: React.FC = () => {
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  
   const [activeTab, setActiveTab] = useState<Tab>(Tab.WELCOME);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -26,6 +50,25 @@ const App: React.FC = () => {
     }
   };
 
+  // Loading Screen while checking session
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-950">
+        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+      </div>
+    );
+  }
+
+  // Auth Flow (Login/Register)
+  if (!session) {
+    return authView === 'login' ? (
+      <Login onSwitchToRegister={() => setAuthView('register')} />
+    ) : (
+      <Register onSwitchToLogin={() => setAuthView('login')} />
+    );
+  }
+
+  // Main App (Protected)
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
       <Sidebar 
