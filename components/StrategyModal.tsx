@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Activity, Shield, Crosshair, BarChart2 } from 'lucide-react';
+import { X, Activity, Shield, Crosshair, BarChart2, Download, FileText } from 'lucide-react';
 
 interface StrategyModalProps {
   isOpen: boolean;
@@ -12,6 +12,15 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
 
   const isDual = type === 'DUAL';
 
+  // Definiamo i file da scaricare (Assicurati di averli creati e messi in public/reports/)
+  const downloadLink = isDual 
+    ? '/reports/Report_Dual_Engine.pdf' 
+    : '/reports/Report_BTC_Trend.pdf';
+
+  const reportTitle = isDual 
+    ? 'Report Backtest Dual Strategy (2022-2025)'
+    : 'Report Backtest BTC Trend (2023-2024)';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -20,9 +29,9 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
         <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
           <div>
             <h3 className="text-2xl font-bold text-white">
-              {isDual ? 'Dual Strategy (BTC + ETH)' : 'BTC Trend Following'}
+              {isDual ? 'Dual Engine (BTC + ETH)' : 'BTC Trend Following'}
             </h3>
-            <p className="text-emerald-400 font-medium">Analisi Tecnica & Gestione Rischio</p>
+            <p className="text-emerald-400 font-medium text-sm">Analisi Tecnica & Gestione Rischio</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
             <X size={24} />
@@ -30,7 +39,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
         </div>
 
         {/* Content Scrollable */}
-        <div className="p-6 overflow-y-auto space-y-8 text-slate-300">
+        <div className="p-6 overflow-y-auto space-y-8 text-slate-300 flex-1">
           
           {/* Sezione 1: Come Entra a Mercato */}
           <div className="space-y-4">
@@ -54,7 +63,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
             </ul>
           </div>
 
-          {/* Sezione 2: Gestione Rischio (Diversa per Dual) */}
+          {/* Sezione 2: Gestione Rischio */}
           <div className="space-y-4">
             <h4 className="text-xl font-bold text-white flex items-center gap-2">
               <Shield className="text-emerald-500" /> Risk Management Professionale
@@ -78,40 +87,65 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
                 {isDual && (
                   <li className="flex items-start gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                     <strong className="text-emerald-400">Vantaggio DUAL:</strong> 
-                    Diversificazione 60% BTC e 40% ETH. Se un asset soffre, l'altro compensa. Drawdown massimo storico contenuto al 10.4%.
+                    Diversificazione 60% BTC e 40% ETH. Se un asset soffre, l'altro compensa. Drawdown storico contenuto al 10.4%.
                   </li>
                 )}
               </ul>
             </div>
           </div>
 
-          {/* Sezione 3: Statistiche Reali (Dal Backtest) */}
+          {/* Sezione 3: Statistiche Reali */}
           <div className="space-y-4">
-            <h4 className="text-xl font-bold text-white">Performance Storica (2022-2025)</h4>
+            <h4 className="text-xl font-bold text-white">Performance Storica</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div className="bg-slate-800 p-4 rounded-xl">
                 <div className="text-xs text-slate-500 uppercase">Ritorno Totale</div>
-                <div className="text-2xl font-bold text-emerald-400">{isDual ? '+41.54%' : '+45.44%'}</div>
+                <div className="text-2xl font-bold text-emerald-400">{isDual ? '+41.54%' : '+39.34%'}</div>
               </div>
               <div className="bg-slate-800 p-4 rounded-xl">
                 <div className="text-xs text-slate-500 uppercase">Win Rate</div>
-                <div className="text-xl font-bold text-white">{isDual ? '53.5%' : '55%'}</div>
+                <div className="text-xl font-bold text-white">{isDual ? '53.5%' : '54.0%'}</div>
               </div>
               <div className="bg-slate-800 p-4 rounded-xl">
                 <div className="text-xs text-slate-500 uppercase">Max Drawdown</div>
-                <div className="text-xl font-bold text-red-400">{isDual ? '-10.4%' : '-8.87%'}</div>
+                <div className="text-xl font-bold text-red-400">{isDual ? '-10.4%' : '-6.73%'}</div>
               </div>
               <div className="bg-slate-800 p-4 rounded-xl">
                 <div className="text-xs text-slate-500 uppercase">Trade/Anno</div>
-                <div className="text-xl font-bold text-white">{isDual ? '~63' : '~29'}</div>
+                <div className="text-xl font-bold text-white">{isDual ? '~63' : '~31'}</div>
               </div>
             </div>
             <p className="text-xs text-slate-500 text-center mt-2 italic">
-              *Dati basati su backtest storici (Bear market 2022 incluso). Le performance passate non garantiscono risultati futuri.
+              *Dati basati su backtest storici verificati. Le performance passate non garantiscono risultati futuri.
             </p>
           </div>
 
         </div>
+
+        {/* FOOTER DOWNLOAD PDF */}
+        <div className="p-5 border-t border-slate-800 bg-slate-950 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+                <div className="bg-slate-800 p-2 rounded-lg text-slate-400">
+                    <FileText size={24} />
+                </div>
+                <div>
+                    <div className="text-white font-medium text-sm">Documentazione Ufficiale</div>
+                    <div className="text-slate-500 text-xs">Analisi completa e Equity Curve</div>
+                </div>
+            </div>
+            
+            <a 
+                href={downloadLink} 
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-slate-700 hover:border-slate-500"
+            >
+                <Download size={18} />
+                Scarica Report PDF
+            </a>
+        </div>
+
       </div>
     </div>
   );
