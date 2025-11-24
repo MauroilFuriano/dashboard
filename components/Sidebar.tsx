@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Wallet, MessageSquare, Zap, X, LogOut, ExternalLink, Users, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Wallet, MessageSquare, Zap, X, LogOut, ExternalLink, Users, TrendingUp, Lock } from 'lucide-react';
 import { Tab, NavigationItem } from '../types';
 import { supabase } from '../supabase';
 
@@ -8,9 +8,10 @@ interface SidebarProps {
   setActiveTab: (tab: Tab) => void;
   isMobileOpen: boolean;
   setIsMobileOpen: (isOpen: boolean) => void;
+  hasActivePlan: boolean; // <--- NUOVA PROPRIETÀ
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen, hasActivePlan }) => {
   
   const menuItems: NavigationItem[] = [
     { id: Tab.WELCOME, label: 'Benvenuto', icon: LayoutDashboard },
@@ -65,34 +66,48 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             
+            // LOGICA DI BLOCCO:
+            // Blocca se NON siamo su Welcome E l'utente NON ha un piano attivo
+            const isLocked = item.id !== Tab.WELCOME && !hasActivePlan;
+            
             return (
               <button
                 key={item.id}
+                disabled={isLocked} // Disabilita il bottone HTML
                 onClick={() => {
-                  setActiveTab(item.id);
-                  setIsMobileOpen(false);
+                  if (!isLocked) {
+                    setActiveTab(item.id);
+                    setIsMobileOpen(false);
+                  }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative
                   ${isActive 
                     ? 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-inner' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50 hover:translate-x-1'
-                  }`}
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }
+                  ${isLocked ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-slate-400' : ''}
+                `}
               >
                 <Icon size={20} className={isActive ? 'text-emerald-500' : 'text-slate-500 group-hover:text-slate-300'} />
                 <span className="font-medium text-sm">{item.label}</span>
+                
                 {isActive && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                )}
+
+                {/* Mostra il lucchetto se bloccato */}
+                {isLocked && (
+                    <Lock size={14} className="ml-auto text-slate-600" />
                 )}
               </button>
             );
           })}
 
-          {/* --- SEZIONE COMMUNITY & PARTNER (NUOVA) --- */}
+          {/* --- SEZIONE COMMUNITY --- */}
           <div className="pt-6 mt-4 border-t border-slate-800/50">
             <p className="px-4 text-[10px] uppercase font-bold text-slate-500 mb-3 tracking-wider">Community & Supporto</p>
             
             <div className="px-3 space-y-3">
-                {/* Box Informativo MEXC */}
                 <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-xs space-y-2">
                     <p className="text-slate-400 leading-relaxed">
                         I nostri bot sono ottimizzati e testati per operare esclusivamente su:
@@ -103,7 +118,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                     </div>
                 </div>
 
-                {/* Link Telegram */}
                 <a 
                     href="https://t.me/MauroilFurianoCryotoGalassia" 
                     target="_blank" 
@@ -118,7 +132,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                     <ExternalLink size={14} className="ml-auto opacity-50 group-hover:opacity-100" />
                 </a>
 
-                {/* Link MEXC */}
                 <a 
                     href="https://promote.mexc.com/r/b2QRLbsk" 
                     target="_blank" 
@@ -156,7 +169,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
   );
 };
 
-// Icona logo helper
 const CheckCircleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white w-6 h-6">
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>

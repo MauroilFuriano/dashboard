@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Zap, Eye, EyeOff, CheckCircle, Lock } from 'lucide-react';
-// Importiamo il collegamento a Supabase che hai appena creato
+import React, { useState, useEffect } from 'react';
+import { Zap, Eye, EyeOff, CheckCircle, Lock, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 
 const ActivationForm: React.FC = () => {
@@ -12,9 +11,18 @@ const ActivationForm: React.FC = () => {
     chatId: ''
   });
 
+  const [email, setEmail] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const [showToken, setShowToken] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Recuperiamo l'email dell'utente loggato all'avvio
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) setEmail(user.email);
+    });
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -25,24 +33,25 @@ const ActivationForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     
-    // Validazione
-    if (!formData.accessKey || !formData.secretKey || !formData.botToken) {
-      alert("Per favore compila tutti i campi obbligatori.");
+    // Validazione base
+    if (!formData.accessKey || !formData.secretKey || !formData.botToken || !formData.chatId) {
+      setErrorMessage("Tutti i campi sono obbligatori per il funzionamento del bot.");
+      setStatus('error');
       return;
     }
 
     setStatus('loading');
 
     try {
-      // --- INVIO REALE A SUPABASE ---
       const { error } = await supabase
-        .from('richieste_attivazione') // Nome della tabella che hai creato
+        .from('richieste_attivazione')
         .insert([
           {
-            // A sinistra i nomi delle colonne su Supabase
-            // A destra i dati del form
-            nome_cliente: formData.clientName,
+            // Associa l'email dell'account loggato (più sicuro)
+            user_email: email, 
+            nome_cliente: formData.clientName || email.split('@')[0], // Fallback sul nome email se vuoto
             access_key: formData.accessKey,
             secret_key: formData.secretKey,
             telegram_token: formData.botToken,
@@ -52,165 +61,188 @@ const ActivationForm: React.FC = () => {
 
       if (error) throw error;
 
-      // Se tutto va bene:
       setStatus('success');
 
     } catch (error: any) {
-      console.error('Errore durante l\'invio:', error);
-      alert("C'è stato un errore nell'invio dei dati: " + error.message);
-      setStatus('idle');
+      console.error('Errore invio:', error);
+      setErrorMessage(error.message || "Errore sconosciuto durante il salvataggio.");
+      setStatus('error');
     }
   };
 
   if (status === 'success') {
     return (
       <div className="flex flex-col items-center justify-center text-center space-y-6 py-10 animate-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
-          <CheckCircle className="w-10 h-10 text-green-500" />
+        <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/10">
+          <CheckCircle className="w-12 h-12 text-emerald-500" />
         </div>
-        <h2 className="text-3xl font-bold text-white">Richiesta Inviata con Successo!</h2>
-        <p className="text-slate-400 max-w-md">
-          I tuoi dati sono stati salvati nel database sicuro.
-          Il team tecnico sta configurando il tuo bot.
-        </p>
-        <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
-          <p className="text-sm text-slate-300">Controlla la tua email o Telegram tra <span className="text-green-400 font-bold">1-2 ore</span></p>
+        <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Configurazione Completata!</h2>
+            <p className="text-slate-400 max-w-md mx-auto">
+            I tuoi dati sono stati crittografati e inviati al server sicuro.
+            Il bot inizierà l'inizializzazione entro <span className="text-white font-bold">60 minuti</span>.
+            </p>
         </div>
-        <button 
-          onClick={() => {
-            setStatus('idle');
-            setFormData({ clientName: '', accessKey: '', secretKey: '', botToken: '', chatId: '' });
-          }}
-          className="text-slate-500 hover:text-white underline mt-4 text-sm"
-        >
-          Invia una nuova richiesta
-        </button>
+        
+        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 max-w-sm w-full">
+            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Prossimi Step</h3>
+            <ul className="text-left text-sm space-y-2 text-slate-400">
+                <li className="flex gap-2"><span>1.</span> Verifica che il bot Telegram risponda.</li>
+                <li className="flex gap-2"><span>2.</span> Attendi il primo messaggio di "Benvenuto".</li>
+                <li className="flex gap-2"><span>3.</span> Rilassati e lascia fare all'algoritmo.</li>
+            </ul>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto animate-fade-in">
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold text-white mb-2">Attivazione Servizio</h2>
-        <p className="text-slate-400">Inserisci i dati per avviare il tuo CryptoBot Elite.</p>
+        <p className="text-slate-400">Inserisci le API Key generate per avviare il CryptoBot Elite.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-slate-900/50 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl space-y-6">
+      <form onSubmit={handleSubmit} className="bg-slate-900/50 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl space-y-6 relative overflow-hidden">
         
+        {/* Glow effect */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
+
+        {status === 'error' && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl flex items-start gap-3">
+                <AlertCircle className="shrink-0 w-5 h-5 mt-0.5" />
+                <span className="text-sm">{errorMessage}</span>
+            </div>
+        )}
+
         {/* Nome Cliente */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-400">Nome Cliente</label>
+          <label className="text-sm font-medium text-slate-400">Nome Identificativo</label>
           <input
             type="text"
             name="clientName"
             value={formData.clientName}
             onChange={handleChange}
-            placeholder="Mario Rossi"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+            placeholder="Es. Mario Rossi (Portfolio A)"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-600"
           />
         </div>
 
+        <div className="h-px bg-slate-800 my-4" />
+
         {/* MEXC Keys */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-400">MEXC Access Key</label>
-            <input
-              type="text"
-              name="accessKey"
-              value={formData.accessKey}
-              onChange={handleChange}
-              placeholder="mx0..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-400">MEXC Secret Key</label>
-            <div className="relative">
-              <input
-                type={showSecret ? "text" : "password"}
-                name="secretKey"
-                value={formData.secretKey}
+        <div>
+            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                Credenziali MEXC
+            </h3>
+            <div className="grid grid-cols-1 gap-5">
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-400">Access Key (Public)</label>
+                <input
+                type="text"
+                name="accessKey"
+                value={formData.accessKey}
                 onChange={handleChange}
-                placeholder="••••••••••••••••••••••••"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-              >
-                {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+                placeholder="mx0..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm placeholder-slate-600"
+                />
             </div>
-          </div>
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-400">Secret Key (Private)</label>
+                <div className="relative">
+                <input
+                    type={showSecret ? "text" : "password"}
+                    name="secretKey"
+                    value={formData.secretKey}
+                    onChange={handleChange}
+                    placeholder="Incolla qui la chiave segreta..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm pr-10 placeholder-slate-600"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowSecret(!showSecret)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                >
+                    {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                </div>
+            </div>
+            </div>
         </div>
 
+        <div className="h-px bg-slate-800 my-4" />
+
         {/* Telegram Data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-400">Telegram Bot Token</label>
-            <div className="relative">
-              <input
-                type={showToken ? "text" : "password"}
-                name="botToken"
-                value={formData.botToken}
-                onChange={handleChange}
-                placeholder="12345:AAEF..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-              >
-                {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+        <div>
+            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                Credenziali Telegram
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-400">Bot Token</label>
+                <div className="relative">
+                <input
+                    type={showToken ? "text" : "password"}
+                    name="botToken"
+                    value={formData.botToken}
+                    onChange={handleChange}
+                    placeholder="12345:AAEF..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm pr-10 placeholder-slate-600"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                >
+                    {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-400">Telegram Chat ID</label>
-            <input
-              type="text"
-              name="chatId"
-              value={formData.chatId}
-              onChange={handleChange}
-              placeholder="12345678"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm"
-            />
-          </div>
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-400">Chat ID</label>
+                <input
+                type="text"
+                name="chatId"
+                value={formData.chatId}
+                onChange={handleChange}
+                placeholder="12345678"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm placeholder-slate-600"
+                />
+            </div>
+            </div>
         </div>
 
         {/* Bottone Submit */}
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg
-            ${status === 'loading' 
-              ? 'bg-slate-700 cursor-not-allowed text-slate-400' 
-              : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-900/20 hover:shadow-brand-500/20 hover:-translate-y-1'
-            }`}
-        >
-          {status === 'loading' ? (
-            <>
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Salvataggio in corso...
-            </>
-          ) : (
-            <>
-              <Zap className="w-5 h-5 fill-current" />
-              ATTIVA IL MIO BOT
-            </>
-          )}
-        </button>
+        <div className="pt-4">
+            <button
+            type="submit"
+            disabled={status === 'loading'}
+            className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg
+                ${status === 'loading' 
+                ? 'bg-slate-800 cursor-not-allowed text-slate-400' 
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-900/20 hover:shadow-brand-500/20 hover:-translate-y-1'
+                }`}
+            >
+            {status === 'loading' ? (
+                <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Salvataggio sicuro...
+                </>
+            ) : (
+                <>
+                <Zap className="w-5 h-5 fill-current" />
+                AVVIA TRADING BOT
+                </>
+            )}
+            </button>
 
-        <p className="text-center text-xs text-slate-500 mt-4 flex items-center justify-center gap-1">
-          <Lock size={12} />
-          Dati crittografati SSL e salvati su server sicuro.
-        </p>
+            <p className="text-center text-[10px] text-slate-500 mt-4 flex items-center justify-center gap-1.5 opacity-70">
+            <Lock size={10} />
+            Dati trasmessi tramite protocollo sicuro SSL/TLS End-to-End
+            </p>
+        </div>
       </form>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, CheckCircle, Wallet, Loader2, AlertTriangle, ChevronDown, User } from 'lucide-react';
+import { X, Copy, CheckCircle, Loader2, User } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface PaymentModalProps {
@@ -18,14 +18,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
   };
 
   const [network, setNetwork] = useState<'BSC' | 'SOL'>('BSC'); 
-  const [senderWallet, setSenderWallet] = useState(''); // Qui salviamo il LORO indirizzo
+  const [senderWallet, setSenderWallet] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [confirmed, setConfirmed] = useState(false); // Checkbox di sicurezza
+  const [confirmed, setConfirmed] = useState(false);
 
   if (!isOpen) return null;
 
   const activeAddress = network === 'BSC' ? wallets.BSC : wallets.SOL;
+  // QR Code generato dinamicamente
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${activeAddress}`;
 
   const handleCopy = () => {
@@ -44,25 +45,33 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
     setLoading(true);
 
     try {
+      // 1. Recuperiamo l'utente corrente per avere la sua email
       const { data: { user } } = await supabase.auth.getUser();
 
+      if (!user || !user.email) {
+        throw new Error("Utente non identificato. Prova a fare logout e login.");
+      }
+
+      // 2. Inseriamo il record nella tabella 'pagamenti' (minuscolo!)
       const { error } = await supabase
         .from('pagamenti')
         .insert([{
-            user_email: user?.email,
+            user_email: user.email,
             piano: planName,
-            // Salviamo il loro wallet se lo hanno messo, altrimenti scriviamo "Non specificato"
-            txid: senderWallet || "Non specificato - Verifica orario", 
-            stato: 'pending'
+            txid: senderWallet || "Non specificato", 
+            stato: 'pending' // Di default è pending finché non controlli il wallet
           }]);
 
       if (error) throw error;
 
+      // 3. Successo
       setLoading(false);
-      onSuccess(); // Chiude e va avanti
+      onSuccess(); // Questo dirà ad App.tsx di sbloccare le tab
       onClose();
+
     } catch (error: any) {
-      alert("Errore: " + error.message);
+      console.error(error);
+      alert("Errore nel salvataggio: " + error.message);
       setLoading(false);
     }
   };
@@ -79,9 +88,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
 
         <div className="p-6 space-y-8">
           
-          {/* STEP 1 & 2: Selezione Rete (Semplificata) */}
+          {/* Selezione Rete */}
           <div className="grid grid-cols-2 gap-3">
             <button 
+              type="button"
               onClick={() => setNetwork('BSC')}
               className={`p-3 rounded-xl border text-center transition-all ${
                 network === 'BSC' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
@@ -90,6 +100,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
               <div className="font-bold">Rete BSC (BEP20)</div>
             </button>
             <button 
+              type="button"
               onClick={() => setNetwork('SOL')}
               className={`p-3 rounded-xl border text-center transition-all ${
                 network === 'SOL' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
@@ -99,7 +110,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
             </button>
           </div>
 
-          {/* STEP 3: Indirizzo e QR */}
+          {/* Indirizzo e QR */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center">
             <div className="bg-white p-2 rounded-lg mb-4">
               <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40" />
@@ -117,26 +128,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
             </div>
           </div>
 
-          {/* STEP 4: Conferma Semplice */}
+          {/* Conferma */}
           <form onSubmit={handleSubmit} className="pt-4 border-t border-slate-800 space-y-4">
             
-            {/* Campo Wallet Mittente (Opzionale/Facile) */}
+            {/* Campo Wallet Mittente */}
             <div>
               <label className="block text-slate-400 text-sm mb-2">Il tuo indirizzo Wallet (Facoltativo)</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                   <User size={18} />
+                </div>
                 <input 
                   type="text" 
                   placeholder="Es. Il tuo indirizzo di Binance/Metamask..."
                   value={senderWallet}
                   onChange={(e) => setSenderWallet(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:border-emerald-500 outline-none text-sm"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:border-emerald-500 outline-none text-sm placeholder-slate-600"
                 />
               </div>
               <p className="text-xs text-slate-600 mt-1">Ci aiuta a trovare subito il tuo pagamento.</p>
             </div>
 
-            {/* Checkbox "Ho pagato" */}
+            {/* Checkbox */}
             <label className="flex items-start gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl cursor-pointer hover:bg-emerald-500/10 transition-colors">
               <input 
                 type="checkbox" 
@@ -145,7 +158,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
                 className="w-5 h-5 mt-0.5 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500 bg-slate-900" 
               />
               <span className="text-sm text-slate-300">
-                Ho inviato <strong>{price}</strong> all'indirizzo indicato. Sono consapevole che l'attivazione avverrà dopo la verifica manuale (max 2 ore).
+                Ho inviato <strong>{price}</strong> all'indirizzo indicato. Sono consapevole che l'attivazione avverrà dopo la verifica manuale.
               </span>
             </label>
             

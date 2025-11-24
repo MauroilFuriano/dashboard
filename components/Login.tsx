@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
-import { Mail, Lock, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -9,6 +9,10 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // STATO AGGIUNTO per gestire la visibilità della password
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +30,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
       setError(error.message);
       setLoading(false);
     } else {
-      // App.tsx gestirà il cambio di stato tramite onAuthStateChange
+      // App.tsx gestirà il cambio di stato
     }
   };
 
@@ -75,14 +79,22 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-slate-600" />
               </div>
+              {/* INPUT MODIFICATO CON TOGGLE VISIBILITÀ */}
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                className="block w-full pl-10 pr-10 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 outline-none"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 

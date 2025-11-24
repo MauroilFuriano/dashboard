@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ SOSTITUISCI LE SCRITTE TRA VIRGOLETTE CON I TUOI CODICI VERI DI SUPABASE
-const supabaseUrl = 'https://hlzjlsuirhulmjhbzmtd.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsempsc3Vpcmh1bG1qaGJ6bXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NjY1MzYsImV4cCI6MjA3OTI0MjUzNn0.d8V5moslwfWxcQqkU4Sk5ujx2JDZYKucWREOvINawx4';
+// Legge le variabili dal file .env.local
+// In Vite si usa import.meta.env invece di process.env
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Controllo di sicurezza per evitare crash se il file .env non viene letto
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Mancano le variabili d'ambiente VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY. Controlla il file .env.local");
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

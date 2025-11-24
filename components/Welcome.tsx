@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, TrendingUp, Info, Shield, Zap, Activity, CheckCircle, BarChart3, AlertCircle } from 'lucide-react';
+import { TrendingUp, Info, Shield, Zap, CheckCircle, BarChart3, Calculator, AlertTriangle } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PaymentModal from './PaymentModal';
 import StrategyModal from './StrategyModal';
@@ -8,14 +8,14 @@ interface WelcomeProps {
   onNext: () => void;
 }
 
-// ✅ FIX: Performance data allineati a +46.2% (Dual backtest reale)
 const performanceData = [
   { name: 'Start', value: 10000 },
-  { name: 'M 3', value: 10340 },
-  { name: 'M 6', value: 10690 },
+  { name: 'M 6', value: 10650 },
   { name: 'Y 1', value: 11350 },
+  { name: 'Y 1.5', value: 12100 },
   { name: 'Y 2', value: 12883 },
-  { name: 'Y 3', value: 14620 },  // +46.2% total
+  { name: 'Y 2.5', value: 13700 },
+  { name: 'Y 3', value: 14620 },
 ];
 
 const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
@@ -34,7 +34,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
   };
 
   return (
-    <div className="animate-in fade-in duration-700 h-full pb-6">
+    <div className="animate-in fade-in duration-700 h-full pb-0 flex flex-col">
       
       {/* Modals */}
       <PaymentModal 
@@ -51,35 +51,35 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
       />
 
       {/* TITOLO */}
-      <div className="text-left mb-6">
+      <div className="text-left mb-6 shrink-0">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase mb-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          Backtest 2022-2025 Verificato
+          Backtest 2022-2025
         </div>
         <h1 className="text-4xl font-bold text-white leading-tight">
           Scegli la tua <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Strategia</span>
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
         
         {/* --- COLONNA SINISTRA (60%) --- */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           
-          {/* 1. BOT MASCOT */}
-          <div className="w-full relative h-72 flex items-center justify-center">
-             <div className="absolute inset-0 bg-emerald-500/10 blur-[70px] rounded-full scale-75"></div>
+          {/* 1. IMMAGINE BOT (Modificata: senza contenitore, full width) */}
+          <div className="w-full shrink-0">
              <img 
                src="/bot-mascot.jpg" 
-               alt="Crypto Bot" 
-               className="relative z-10 h-full w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+               alt="Crypto Bot AI" 
+               className="w-full h-auto rounded-2xl object-cover shadow-xl"
                onError={(e) => {
-                 e.currentTarget.src = "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=1000&auto=format&fit=crop";
+                 // Fallback immagine se la tua non carica
+                 e.currentTarget.src = "https://img.freepik.com/free-photo/futuristic-robot-artificial-intelligence-concept_23-2151042259.jpg?t=st=1710685000~exp=1710688600~hmac=e309e82852225676748717886692196094168559257661761485182883886062&w=1380";
                }}
              />
           </div>
 
-          {/* 2. PRODOTTI */}
+          {/* 2. I PRODOTTI */}
           <div className="grid grid-cols-2 gap-4 flex-1">
             
             {/* CARD BTC */}
@@ -91,37 +91,25 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
               <div>
                 <div className="bg-amber-500/10 text-amber-500 w-10 h-10 flex items-center justify-center rounded-xl font-bold text-lg mb-3">₿</div>
                 <h3 className="font-bold text-white text-lg">BTC Trend</h3>
-                <p className="text-xs text-slate-400 mt-1 mb-4">Stabilità e gestione risk controllata per investitori prudenti.</p>
+                <p className="text-xs text-slate-400 mt-1 mb-4">Stabilità per investitori prudenti.</p>
               </div>
               
               <ul className="space-y-3 mb-6">
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Target Annuo</span> 
-                  <span className="text-emerald-400 font-bold">13-18%</span>
+                  <span className="text-slate-400">Target</span> <span className="text-emerald-400 font-bold">13-18%</span>
                 </li>
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Trade</span> 
-                  <span className="text-white">~29/anno</span>
+                  <span className="text-slate-400">Trade</span> <span className="text-white">~29/anno</span>
                 </li>
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Rischio</span> 
-                  <span className="text-white font-medium flex items-center gap-1">
-                    <Shield size={12} className="text-emerald-500"/> Contenuto
-                  </span>
-                </li>
-                <li className="flex justify-between text-sm">
-                  <span className="text-slate-400">Capitale Min</span> 
-                  <span className="text-white font-medium">$1,000</span>
+                  <span className="text-slate-400">Rischio</span> <span className="text-white font-medium flex items-center gap-1"><Shield size={12} className="text-emerald-500"/> Contenuto</span>
                 </li>
               </ul>
 
               <div>
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-3">
                   <span className="text-3xl font-bold text-white">29€</span>
                   <span className="text-slate-500 text-sm">/mese</span>
-                </div>
-                <div className="text-[10px] text-slate-500 mb-3">
-                  💎 Include 2 settimane Paper Trading
                 </div>
                 <button 
                   onClick={() => handleSelect('BTC Single', '29€', 'SINGLE')} 
@@ -132,7 +120,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
               </div>
             </div>
 
-            {/* CARD DUAL - ✅ FIX: Target realistico 13-18% */}
+            {/* CARD DUAL */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500 transition-all group relative flex flex-col h-full justify-between ring-1 ring-emerald-500/10 shadow-xl shadow-emerald-900/5">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full shadow-lg uppercase tracking-wider">
                 Consigliato
@@ -147,39 +135,26 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                    <div className="bg-indigo-500/10 text-indigo-500 w-10 h-10 flex items-center justify-center rounded-xl font-bold text-lg border-2 border-slate-900">Ξ</div>
                 </div>
                 <h3 className="font-bold text-white text-lg">Dual Engine</h3>
-                <p className="text-xs text-emerald-400/80 mt-1 mb-4">Diversificazione 60/40 su BTC+ETH, 2x opportunità.</p>
+                <p className="text-xs text-emerald-400/80 mt-1 mb-4">Diversificazione 60/40 dinamica.</p>
               </div>
               
               <ul className="space-y-3 mb-6">
-                {/* ✅ FIX: Target ridotto a range realistico */}
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Target Annuo</span> 
-                  <span className="text-emerald-400 font-bold">13-18%</span>
+                  <span className="text-slate-400">Target</span> <span className="text-emerald-400 font-bold">14-20%</span>
                 </li>
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Trade</span> 
-                  <span className="text-white">~63/anno</span>
+                  <span className="text-slate-400">Trade</span> <span className="text-white">~63/anno</span>
                 </li>
                 <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Rischio</span> 
-                  <span className="text-white font-medium flex items-center gap-1">
-                    <Zap size={12} className="text-yellow-400"/> Moderato
-                  </span>
-                </li>
-                <li className="flex justify-between text-sm">
-                  <span className="text-slate-400">Capitale Min</span> 
-                  <span className="text-white font-medium">$5,000</span>
+                  <span className="text-slate-400">Rischio</span> <span className="text-white font-medium flex items-center gap-1"><Zap size={12} className="text-yellow-400"/> Moderato</span>
                 </li>
               </ul>
 
               <div>
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-3">
                   <span className="text-3xl font-bold text-white">49€</span>
                   <span className="text-slate-500 text-sm">/mese</span>
-                  <span className="ml-auto text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">Best Value</span>
-                </div>
-                <div className="text-[10px] text-slate-500 mb-3">
-                  💎 Include 2 settimane Paper Trading
+                  <span className="ml-auto text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">-20%</span>
                 </div>
                 <button 
                   onClick={() => handleSelect('Dual Combo', '49€', 'DUAL')} 
@@ -190,19 +165,6 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
               </div>
             </div>
 
-          </div>
-
-          {/* ✅ NUOVO: Disclaimer Legale */}
-          <div className="mt-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
-            <div className="flex items-start gap-2">
-              <AlertCircle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-[10px] text-slate-500 leading-relaxed">
-                <strong className="text-slate-400">Disclaimer:</strong> Le performance passate non garantiscono risultati futuri. 
-                Il trading di criptovalute comporta rischi significativi di perdita di capitale. 
-                Opera solo con fondi che puoi permetterti di perdere. 
-                Questo non è consulenza finanziaria. Testato su dati storici 2022-2025.
-              </p>
-            </div>
           </div>
         </div>
 
@@ -218,29 +180,39 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                     <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-1">
                       <TrendingUp className="text-emerald-400" size={22} /> Performance
                     </h3>
-                    <p className="text-xs text-slate-500">Backtest Storico Dual Strategy</p>
+                    <p className="text-xs text-slate-500">Backtest Storico Cumulativo</p>
                   </div>
                   <div className="bg-slate-800/50 px-3 py-1 rounded-lg border border-slate-700">
                      <div className="text-emerald-400 text-xs font-bold flex items-center gap-1">
-                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Verificato
+                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Bullish
                      </div>
                   </div>
                 </div>
              </div>
 
-             {/* ✅ Metriche aggiornate */}
-             <div className="grid grid-cols-2 gap-4 mb-10 relative z-10">
+             <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 backdrop-blur-sm">
                    <div className="text-[10px] text-slate-500 uppercase mb-1">Ritorno 3Y</div>
                    <div className="text-3xl font-bold text-emerald-400">+46.2%</div>
                 </div>
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 backdrop-blur-sm">
-                   <div className="text-[10px] text-slate-500 uppercase mb-1">Max Drawdown</div>
+                   <div className="text-[10px] text-slate-500 uppercase mb-1">Drawdown</div>
                    <div className="text-3xl font-bold text-white">-10.4%</div>
                 </div>
              </div>
 
-             {/* ✅ Grafico con dati corretti */}
+             <div className="mb-6 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3 relative z-10">
+                <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-400">
+                   <Calculator size={20} />
+                </div>
+                <div>
+                   <div className="text-xs text-slate-400">Esempio Interesse Composto</div>
+                   <div className="text-sm text-white font-medium">
+                      $1,000 <span className="text-slate-500">→</span> <span className="text-emerald-400 font-bold">$1,462</span> (in 3 Anni)
+                   </div>
+                </div>
+             </div>
+
              <div className="flex-1 w-full min-h-[250px] relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -255,7 +227,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }} 
                       itemStyle={{ color: '#10b981', fontWeight: 'bold' }} 
-                      formatter={(value) => [`$${value.toLocaleString()}`, 'Capitale']} 
+                      formatter={(value) => [`$${value}`, 'Capitale']} 
                       labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '5px' }}
                     />
                     <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fill="url(#colorVal)" animationDuration={2000} />
@@ -266,17 +238,30 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
              <div className="mt-8 pt-6 border-t border-slate-800 relative z-10">
                 <div className="flex items-center justify-between text-[10px] text-slate-500">
                    <span className="flex items-center gap-1"><CheckCircle size={12}/> Dati Blockchain</span>
-                   <span className="flex items-center gap-1"><BarChart3 size={12}/> Backtest 2022-2025</span>
+                   <span className="flex items-center gap-1"><BarChart3 size={12}/> Aggiornato oggi</span>
                 </div>
              </div>
 
            </div>
         </div>
-
       </div>
+
+      {/* --- DISCLAIMER FOOTER (Nuova Aggiunta) --- */}
+      <div className="mt-12 pt-6 border-t border-slate-800/50 text-center shrink-0 pb-4">
+          <div className="flex items-center justify-center gap-2 text-slate-500 text-xs mb-2 uppercase font-bold tracking-wider">
+              <AlertTriangle size={14} className="text-amber-500" />
+              Disclaimer Legale & Rischi
+          </div>
+          <p className="text-[10px] text-slate-500 leading-relaxed max-w-4xl mx-auto">
+              Il trading di criptovalute comporta un <strong>rischio elevato</strong> e potrebbe non essere adatto a tutti gli investitori. 
+              Le performance passate mostrate nei backtest non sono indicative né garantiscono risultati futuri. 
+              CryptoBot Elite fornisce un software di automazione, non consulenza finanziaria. L'utente è l'unico responsabile delle proprie decisioni di investimento e della gestione del rischio. 
+              Si raccomanda di operare solo con capitali che ci si può permettere di perdere.
+          </p>
+      </div>
+
     </div>
   );
 };
 
 export default Welcome;
-
