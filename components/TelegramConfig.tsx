@@ -1,90 +1,138 @@
 import React from 'react';
-import { MessageCircle, Bot, User, ArrowRight, Copy } from 'lucide-react';
+import { MessageCircle, Bot, User, ArrowRight, PlayCircle, CheckCircle2 } from 'lucide-react';
 
 interface TelegramConfigProps {
   onNext: () => void;
 }
 
 const TelegramConfig: React.FC<TelegramConfigProps> = ({ onNext }) => {
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // In a real app, show a toast here
-  };
-
   return (
-    <div className="space-y-8 animate-fade-in max-w-4xl">
+    <div className="space-y-8 animate-fade-in max-w-5xl">
+      
+      {/* HEADER */}
       <div>
         <h2 className="text-3xl font-bold text-white mb-2">Setup Telegram</h2>
-        <p className="text-slate-400">Configura il tuo assistente personale per le notifiche.</p>
+        <p className="text-slate-400">Collega il tuo bot personale in meno di 2 minuti.</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Step A: Create Bot */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-          
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
-              <Bot size={20} />
+      <div className="grid lg:grid-cols-2 gap-8">
+        
+        {/* --- COLONNA SINISTRA: VIDEO TUTORIAL --- */}
+        <div className="space-y-6">
+            <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50 group">
+                {/* Header Video */}
+                <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400">
+                        <PlayCircle size={16} className="animate-pulse"/>
+                        <span className="text-xs font-bold uppercase tracking-wider">Video Guida Ufficiale</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded">HD 1080p</span>
+                </div>
+                
+                {/* Player */}
+                <div className="relative bg-black aspect-video">
+                    {/* VIDEO FIX: Aggiunto preload="none" e poster aggiornato a banner-v3.jpg */}
+                    <video 
+                        controls 
+                        preload="none"
+                        playsInline
+                        className="w-full h-full object-contain"
+                        poster="/banner-v3.jpg" 
+                    >
+                        {/* Assicurati che il file video sia nella cartella public */}
+                        <source src="/telegram_setup.mp4" type="video/mp4" />
+                        Il tuo browser non supporta il video.
+                    </video>
+                </div>
+
+                {/* Footer Video */}
+                <div className="p-4 bg-slate-900/80">
+                    <h4 className="text-white font-bold text-sm mb-1">Cosa imparerai:</h4>
+                    <ul className="text-xs text-slate-400 space-y-1">
+                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Creare il bot con BotFather</li>
+                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Ottenere il Token segreto</li>
+                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Trovare il tuo Chat ID personale</li>
+                    </ul>
+                </div>
             </div>
-            <h3 className="text-lg font-semibold text-white">Crea il Bot</h3>
-          </div>
 
-          <ol className="space-y-4 text-sm text-slate-400 list-decimal pl-4 marker:text-slate-600">
-            <li>Apri Telegram e cerca <strong className="text-white">@BotFather</strong>.</li>
-            <li>Avvia la chat e digita <code className="bg-slate-800 px-1 py-0.5 rounded text-blue-300">/newbot</code>.</li>
-            <li>Scegli un nome per il tuo bot (es. <em>MarioTradingBot</em>).</li>
-            <li>Scegli uno username che finisca in "bot" (es. <em>mario_trading_bot</em>).</li>
-            <li className="text-white font-medium bg-blue-900/20 p-2 rounded border border-blue-500/20">
-              BotFather ti darà un <strong>TOKEN</strong>. Copialo, ti servirà tra poco!
-            </li>
-          </ol>
-        </div>
-
-        {/* Step B: Get User ID */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
-              <User size={20} />
+            {/* Alert Consigli */}
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3">
+                <div className="mt-0.5"><MessageCircle className="text-blue-400" size={20} /></div>
+                <div>
+                    <h4 className="text-blue-400 font-bold text-sm">Consiglio Importante</h4>
+                    <p className="text-slate-400 text-xs leading-relaxed mt-1">
+                        Dopo aver creato il bot su Telegram, ricordati di premere il tasto <strong>AVVIA</strong> nella chat del tuo nuovo bot, altrimenti non potrà inviarti messaggi!
+                    </p>
+                </div>
             </div>
-            <h3 className="text-lg font-semibold text-white">Il tuo Chat ID</h3>
-          </div>
+        </div>
 
-          <ol className="space-y-4 text-sm text-slate-400 list-decimal pl-4 marker:text-slate-600">
-            <li>Cerca su Telegram <strong className="text-white">@userinfobot</strong>.</li>
-            <li>Avvia la chat o digita <code className="bg-slate-800 px-1 py-0.5 rounded text-purple-300">/start</code>.</li>
-            <li>Il bot risponderà immediatamente con il tuo ID numerico.</li>
-            <li className="text-white font-medium bg-purple-900/20 p-2 rounded border border-purple-500/20">
-              Copia il numero "Id" (es. <em>123456789</em>). Questo serve per inviare i messaggi solo a te.
-            </li>
-          </ol>
+        {/* --- COLONNA DESTRA: ISTRUZIONI SCRITTE --- */}
+        <div className="space-y-4">
+            
+            {/* Step 1 */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-white font-bold border border-slate-700 shrink-0">1</div>
+                    <div>
+                        <h3 className="text-white font-bold mb-1 flex items-center gap-2">
+                            Crea il Bot <Bot size={16} className="text-emerald-500"/>
+                        </h3>
+                        <p className="text-sm text-slate-400 mb-3">
+                            Apri <strong>@BotFather</strong> su Telegram e digita <code>/newbot</code>. Scegli un nome e uno username (es. <em>PippoBot</em>).
+                        </p>
+                        <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="inline-block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                            Apri BotFather
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-white font-bold border border-slate-700 shrink-0">2</div>
+                    <div>
+                        <h3 className="text-white font-bold mb-1 flex items-center gap-2">
+                            Copia il Token
+                        </h3>
+                        <p className="text-sm text-slate-400">
+                            BotFather ti darà un codice lungo (Token). Copialo interamente, ti servirà nel prossimo passaggio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-white font-bold border border-slate-700 shrink-0">3</div>
+                    <div>
+                        <h3 className="text-white font-bold mb-1 flex items-center gap-2">
+                            Trova il tuo ID <User size={16} className="text-purple-500"/>
+                        </h3>
+                        <p className="text-sm text-slate-400 mb-3">
+                            Cerca <strong>@userinfobot</strong> su Telegram, avvialo e copia il numero "Id".
+                        </p>
+                         <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="inline-block bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                            Apri UserInfoBot
+                        </a>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
 
-      <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="text-sm text-slate-400">
-          <span className="text-brand-400 font-bold block mb-1">Consiglio Pro:</span>
-          Una volta creato il tuo bot, cercalo su Telegram e premi "Avvia". Se non lo fai, non potrà scriverti!
-        </div>
-        <a 
-          href="https://t.me/BotFather" 
-          target="_blank" 
-          rel="noreferrer"
-          className="text-center sm:text-left shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          Apri @BotFather
-        </a>
-      </div>
-
-      <div className="flex justify-end pt-6">
+      {/* Footer Action */}
+      <div className="flex justify-end pt-6 border-t border-slate-800">
         <button 
           onClick={onNext}
-          className="group flex items-center space-x-2 bg-white text-slate-950 px-6 py-3 rounded-lg font-semibold hover:bg-slate-200 transition-all"
+          className="group flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20 hover:shadow-emerald-500/20 hover:-translate-y-1"
         >
-          <span>Ho tutti i dati</span>
-          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          <span>Ho tutti i dati, procediamo</span>
+          <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
     </div>

@@ -92,13 +92,15 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
                 </div>
                 
                 <div className="relative bg-black aspect-video group">
+                    {/* MODIFICA: Aggiornato poster a banner-v3.jpg e aggiunto preload="none" */}
                     <video 
-                    controls 
-                    className="w-full h-full object-contain"
-                    poster="https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=1000&auto=format&fit=crop" 
+                      controls 
+                      preload="none"
+                      className="w-full h-full object-contain"
+                      poster="/banner-v3.jpg" 
                     >
-                    <source src="/mexc_tutorial.mp4" type="video/mp4" />
-                    Il tuo browser non supporta il tag video.
+                      <source src="/mexc_tutorial.mp4" type="video/mp4" />
+                      Il tuo browser non supporta il tag video.
                     </video>
                 </div>
 

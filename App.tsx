@@ -1,75 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu, Loader2, User } from 'lucide-react';
 import { supabase } from './supabase';
+import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+
+// Componenti
 import Sidebar from './components/Sidebar';
+import MobileNav from './components/MobileNav';
+import UserMenu from './components/UserMenu';
 import Welcome from './components/Welcome';
 import ExchangeConfig from './components/ExchangeConfig';
 import TelegramConfig from './components/TelegramConfig';
 import ActivationForm from './components/ActivationForm';
+import AnalyzerBotPage from './components/AnalyzerBotPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import { Tab } from './types';
 
 const App: React.FC = () => {
+  // --- STATI ---
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   
-  // STATO AGGIUNTO: Per sapere se l'utente ha già pagato/attivato
-  const [hasActivePlan, setHasActivePlan] = useState(false);
+  const [activePlan, setActivePlan] = useState<string | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
   
   const [activeTab, setActiveTab] = useState<Tab>(Tab.WELCOME);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // --- EFFETTI (Auth & Payment Check) ---
   useEffect(() => {
-    // 1. Controllo sessione iniziale
+    // 1. Controllo sessione all'avvio
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
         checkUserPayment(session.user.email);
+        setShowAuth(false);
       } else {
         setAuthLoading(false);
       }
     });
 
-    // 2. Ascolto cambiamenti auth (login/logout)
+    // 2. Listener per Login/Logout
     const { data: { subscription }, } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+        // Utente loggato: controlla piano e chiudi login
         checkUserPayment(session.user.email);
+        setShowAuth(false);
       } else {
+        // Utente sloggato: resetta tutto
         setAuthLoading(false);
-        setHasActivePlan(false);
+        setActivePlan(null);
+        setActiveTab(Tab.WELCOME);
+        setAuthView('login');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // FUNZIONE CHIAVE: Controlla nel DB se esiste un pagamento
+  // Funzione per controllare lo stato del pagamento su Supabase
   const checkUserPayment = async (email: string | undefined) => {
     if (!email) return;
     setCheckingPayment(true);
-    
     try {
-      // Cerca nella tabella 'pagamenti' se c'è un record per questa email
       const { data, error } = await supabase
         .from('pagamenti')
-        .select('*')
-        .eq('user_email', email)
-        .maybeSingle(); 
+        .select('piano, stato') 
+        .eq('user_email', email);
 
       if (error) {
         console.error("Errore check pagamento:", error);
       }
 
-      // Se troviamo un record (anche 'pending'), sblocchiamo l'utente
-      if (data) {
-        setHasActivePlan(true);
-        // Se era sulla welcome page, lo spostiamo avanti
-        if (activeTab === Tab.WELCOME) {
-            setActiveTab(Tab.EXCHANGE);
+      if (data && data.length > 0) {
+        // Filtra solo i piani approvati
+        const approvedPlans = data
+            .filter(row => row.stato === 'approved')
+            .map(row => row.piano)
+            .join(' ');
+
+        if (approvedPlans.length > 0) {
+             setActivePlan(approvedPlans);
+        } else {
+             setActivePlan(null);
         }
       }
     } catch (err) {
@@ -80,76 +98,189 @@ const App: React.FC = () => {
     }
   };
 
-  const renderContent = () => {
+  // Funzione per aprire il login manualmente
+  const triggerLogin = () => {
+    setAuthView('login');
+    setShowAuth(true);
+    setIsMobileOpen(false); // Chiude il menu mobile se aperto
+  };
+
+  // --- LOGICA VISUALIZZAZIONE ---
+  
+  // Determina se mostrare l'overlay di Login/Register
+  // Lo mostriamo se:
+  // 1. showAuth è true (cliccato su "Accedi")
+  // 2. OPPURE non c'è sessione e l'utente cerca di accedere a una tab diversa da Welcome
+  const isAuthOverlayVisible = showAuth || (!session && activeTab !== Tab.WELCOME);
+
+  // Renderizza il contenuto principale in base alla Tab attiva
+  const renderMainContent = () => {
     switch (activeTab) {
       case Tab.WELCOME:
-        return <Welcome onNext={() => {
-            // Callback: l'utente ha appena pagato nel modale
-            setHasActivePlan(true);
-            setActiveTab(Tab.EXCHANGE);
-        }} />;
-      case Tab.EXCHANGE:
+        return <Welcome 
+          onNext={(productType) => {
+            toast.success('Richiesta inviata! In attesa di verifica.', {
+                duration: 6000,
+                style: { background: '#eab308', color: '#fff', border: 'none', fontWeight: 'bold' },
+                iconTheme: { primary: '#fff', secondary: '#eab308' },
+            });
+          }} 
+          onAuthRequired={triggerLogin} 
+          isLoggedIn={!!session}
+        />;
+      case Tab.ANALYZER: 
+        return <AnalyzerBotPage />;
+      case Tab.EXCHANGE: 
         return <ExchangeConfig onNext={() => setActiveTab(Tab.TELEGRAM)} />;
-      case Tab.TELEGRAM:
+      case Tab.TELEGRAM: 
         return <TelegramConfig onNext={() => setActiveTab(Tab.ACTIVATION)} />;
-      case Tab.ACTIVATION:
+      case Tab.ACTIVATION: 
         return <ActivationForm />;
-      default:
-        return <Welcome onNext={() => setActiveTab(Tab.EXCHANGE)} />;
+      default: 
+        return <Welcome onNext={() => {}} onAuthRequired={triggerLogin} isLoggedIn={!!session} />;
     }
   };
 
-  // SCHERMATA DI CARICAMENTO (Login o Verifica Pagamento)
+  // Renderizza l'Overlay di Autenticazione (Schermo Intero)
+  const renderAuthOverlay = () => {
+    if (!isAuthOverlayVisible) return null;
+
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col h-full w-full overflow-y-auto animate-in fade-in duration-300">
+             {/* Header Overlay: Torna alla Home */}
+             <div className="p-4 absolute top-0 left-0 z-10">
+                <button 
+                  onClick={() => {
+                    setShowAuth(false);
+                    setActiveTab(Tab.WELCOME); // Torna alla home se annulli
+                  }} 
+                  className="text-slate-400 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm border border-slate-800 transition-colors"
+                >
+                    <span className="text-xl">&larr;</span> Home
+                </button>
+             </div>
+
+             {/* Contenuto Login/Register */}
+             <div className="flex-1 flex items-center justify-center p-4 min-h-screen">
+               {authView === 'login' ? (
+                  <Login onSwitchToRegister={() => setAuthView('register')} />
+               ) : (
+                  <Register onSwitchToLogin={() => setAuthView('login')} />
+               )}
+             </div>
+      </div>
+    );
+  };
+
+  // Loading Screen Iniziale
   if (authLoading || checkingPayment) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
-            <p className="text-slate-400 text-sm">Verifica account in corso...</p>
+            <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+            <p className="text-slate-400 text-sm">Caricamento CryptoBot Elite...</p>
         </div>
       </div>
     );
   }
 
-  // FLUSSO AUTH (Login/Register)
-  if (!session) {
-    return authView === 'login' ? (
-      <Login onSwitchToRegister={() => setAuthView('register')} />
-    ) : (
-      <Register onSwitchToLogin={() => setAuthView('login')} />
-    );
-  }
-
-  // APP PRINCIPALE
+  // --- LAYOUT PRINCIPALE ---
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
+    <div className="flex h-screen bg-slate-950 overflow-hidden relative">
+      
+      {/* 1. NOTIFICHE TOAST */}
+      <Toaster 
+        position="top-center" 
+        toastOptions={{ 
+            className: 'toast-custom', 
+            style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' }
+        }} 
+      />
+      
+      {/* 2. OVERLAY AUTH (Login/Register) - Sempre sopra a tutto */}
+      {renderAuthOverlay()}
+
+      {/* 3. SIDEBAR DESKTOP */}
       <Sidebar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+            setActiveTab(tab);
+            if (tab === Tab.WELCOME) setShowAuth(false);
+        }}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
-        hasActivePlan={hasActivePlan}
-        // Qui potresti passare 'hasActivePlan' se vuoi mostrare lucchetti nella sidebar
+        activePlan={activePlan}
+        isLoggedIn={!!session}
+        onLoginClick={triggerLogin}
+        userEmail={session?.user?.email}
       />
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Header Mobile */}
+      {/* 4. AREA CONTENUTO PRINCIPALE */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+        
+        {/* A. HEADER MOBILE (Visibile solo < 1024px) */}
         <header className="lg:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between shrink-0 z-10">
-          <span className="font-bold text-white">CryptoBot Elite</span>
-          <button 
-            onClick={() => setIsMobileOpen(true)}
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            <Menu size={24} />
-          </button>
+          <span className="font-bold text-white text-lg">CryptoBot Elite</span>
+          
+          <div className="flex items-center gap-3">
+             {session ? (
+               // Se loggato: Mostra menu utente
+               <UserMenu email={session.user.email} activePlan={activePlan} />
+             ) : (
+               // Se sloggato: Mostra tasto Accedi (QUESTO MANCAVA PRIMA!)
+               <button 
+                 onClick={triggerLogin}
+                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-emerald-500/20"
+               >
+                 Accedi
+               </button>
+             )}
+             
+             {/* Tasto Menu Hamburger */}
+             <button 
+                onClick={() => setIsMobileOpen(true)} 
+                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
+             >
+                <Menu size={24} />
+             </button>
+          </div>
         </header>
 
-        {/* Contenuto Scrollabile */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth">
-          <div className="max-w-6xl mx-auto pb-10">
-            {renderContent()}
+        {/* B. HEADER DESKTOP (Visibile solo >= 1024px) */}
+        <header className="hidden lg:flex bg-transparent p-6 justify-end items-center shrink-0 z-20 absolute top-0 right-0 w-full pointer-events-none">
+           <div className="pointer-events-auto">
+              {session ? (
+                  <UserMenu email={session.user.email} activePlan={activePlan} />
+              ) : (
+                  <button 
+                    onClick={triggerLogin}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+                  >
+                    Accedi al Pannello
+                  </button>
+              )}
+           </div>
+        </header>
+
+        {/* C. CONTENUTO SCROLLABILE */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth pt-6 lg:pt-20 pb-24 lg:pb-10 w-full">
+          <div className="max-w-6xl mx-auto">
+            {renderMainContent()}
           </div>
         </div>
+
+        {/* D. NAVIGAZIONE MOBILE (Bottom Bar) */}
+        {/* Nascondiamo la navbar se l'overlay di auth è visibile per evitare sovrapposizioni */}
+        {!isAuthOverlayVisible && (
+          <MobileNav 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              activePlan={activePlan}
+              isLoggedIn={!!session}
+              onLoginClick={triggerLogin}
+          />
+        )}
+
       </main>
     </div>
   );

@@ -4,7 +4,8 @@ export enum Tab {
   WELCOME = 'WELCOME',
   EXCHANGE = 'EXCHANGE',
   TELEGRAM = 'TELEGRAM',
-  ACTIVATION = 'ACTIVATION'
+  ACTIVATION = 'ACTIVATION',
+  ANALYZER = 'ANALYZER'
 }
 
 export interface NavigationItem {

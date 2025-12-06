@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
 import { Mail, Lock, Loader2, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast'; // Aggiunto import necessario per le notifiche
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -18,6 +19,13 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // NUOVO CONTROLLO DI SICUREZZA
+    if (!email || !password) {
+      toast.error("Inserisci email e password");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -30,7 +38,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
       setError(error.message);
       setLoading(false);
     } else {
-      // App.tsx gestirà il cambio di stato
+      // App.tsx gestirà il cambio di stato automaticamente
     }
   };
 

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { TrendingUp, Info, Shield, Zap, CheckCircle, BarChart3, Calculator, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Info, Calculator, AlertTriangle, CheckCircle, BarChart3, Shield, Zap, Layers } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PaymentModal from './PaymentModal';
 import StrategyModal from './StrategyModal';
 
 interface WelcomeProps {
-  onNext: () => void;
+  onNext: (type: 'SINGLE' | 'DUAL' | 'ANALYZER') => void;
+  onAuthRequired: () => void;
+  isLoggedIn: boolean;
 }
 
 const performanceData = [
@@ -18,31 +20,34 @@ const performanceData = [
   { name: 'Y 3', value: 14620 },
 ];
 
-const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
+const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn }) => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, type: 'SINGLE' | 'DUAL' }>({ name: '', price: '', type: 'SINGLE' });
+  const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', type: 'SINGLE' });
 
-  const handleSelect = (name: string, price: string, type: 'SINGLE' | 'DUAL') => {
+  const handleSelect = (name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
+    if (!isLoggedIn) {
+      onAuthRequired();
+      return;
+    }
     setSelectedProduct({ name, price, type });
     setIsPaymentOpen(true);
   };
 
-  const openStrategy = (type: 'SINGLE' | 'DUAL') => {
+  const openStrategy = (type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
     setSelectedProduct({ ...selectedProduct, type });
     setIsStrategyOpen(true);
   };
 
   return (
-    <div className="animate-in fade-in duration-700 h-full pb-0 flex flex-col">
+    <div className="animate-in fade-in duration-700 h-full pb-0 flex flex-col relative">
       
-      {/* Modals */}
       <PaymentModal 
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         planName={selectedProduct.name}
         price={selectedProduct.price}
-        onSuccess={onNext}
+        onSuccess={() => onNext(selectedProduct.type)}
       />
       <StrategyModal 
         isOpen={isStrategyOpen}
@@ -51,130 +56,171 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
       />
 
       {/* TITOLO */}
-      <div className="text-left mb-6 shrink-0">
+      <div className="text-left mb-6 shrink-0 relative z-0">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase mb-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           Backtest 2022-2025
         </div>
-        <h1 className="text-4xl font-bold text-white leading-tight">
+        <h1 className="text-2xl sm:text-4xl font-bold text-white leading-tight">
           Scegli la tua <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Strategia</span>
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch relative z-0">
         
-        {/* --- COLONNA SINISTRA (60%) --- */}
+        {/* --- COLONNA SINISTRA (Prodotti) --- */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           
-          {/* 1. IMMAGINE BOT (Modificata: senza contenitore, full width) */}
-          <div className="w-full shrink-0">
+          {/* BANNER PRINCIPALE */}
+          <div className="w-full shrink-0 rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/20 relative group bg-slate-900">
+             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 to-transparent"></div>
              <img 
-               src="/bot-mascot.jpg" 
-               alt="Crypto Bot AI" 
-               className="w-full h-auto rounded-2xl object-cover shadow-xl"
-               onError={(e) => {
-                 // Fallback immagine se la tua non carica
-                 e.currentTarget.src = "https://img.freepik.com/free-photo/futuristic-robot-artificial-intelligence-concept_23-2151042259.jpg?t=st=1710685000~exp=1710688600~hmac=e309e82852225676748717886692196094168559257661761485182883886062&w=1380";
-               }}
+               src="/banner-v3.jpg" 
+               alt="Institutional AI"
+               fetchPriority="high"
+               loading="eager"
+               className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 block"
              />
+             <div className="absolute bottom-4 left-6">
+                <span className="bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded uppercase mb-1 inline-block shadow-lg">
+                  New Release
+                </span>
+                <h3 className="text-white font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Crypto Analyzer Pro</h3>
+             </div>
           </div>
 
-          {/* 2. I PRODOTTI */}
-          <div className="grid grid-cols-2 gap-4 flex-1">
+          {/* GRIGLIA PRODOTTI */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 pt-4">
             
-            {/* CARD BTC */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 transition-all group relative flex flex-col h-full justify-between">
-              <div className="absolute top-4 right-4">
-                 <button onClick={() => openStrategy('SINGLE')} className="text-slate-500 hover:text-emerald-400 transition-colors"><Info size={18} /></button>
-              </div>
+            {/* CARD 1: BTC TREND */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all flex flex-col h-full justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity group-hover:opacity-100 opacity-50 z-0"></div>
               
-              <div>
-                <div className="bg-amber-500/10 text-amber-500 w-10 h-10 flex items-center justify-center rounded-xl font-bold text-lg mb-3">₿</div>
-                <h3 className="font-bold text-white text-lg">BTC Trend</h3>
-                <p className="text-xs text-slate-400 mt-1 mb-4">Stabilità per investitori prudenti.</p>
-              </div>
-              
-              <ul className="space-y-3 mb-6">
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Target</span> <span className="text-emerald-400 font-bold">13-18%</span>
-                </li>
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Trade</span> <span className="text-white">~29/anno</span>
-                </li>
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Rischio</span> <span className="text-white font-medium flex items-center gap-1"><Shield size={12} className="text-emerald-500"/> Contenuto</span>
-                </li>
-              </ul>
-
-              <div>
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-3xl font-bold text-white">29€</span>
-                  <span className="text-slate-500 text-sm">/mese</span>
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-2">
+                        <div className="bg-emerald-500/10 text-emerald-500 p-2 rounded-xl border border-emerald-500/20"><Shield size={18} /></div>
+                        <div className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase h-fit mt-0.5">Spot Only</div>
+                    </div>
+                    <button onClick={() => openStrategy('SINGLE')} className="text-slate-500 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"><Info size={18} /></button>
                 </div>
-                <button 
-                  onClick={() => handleSelect('BTC Single', '29€', 'SINGLE')} 
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-colors"
-                >
-                  Attiva BTC Bot
-                </button>
+                
+                <h3 className="font-bold text-white text-lg mb-1">BTC Trend</h3>
+                <p className="text-xs text-slate-400 mb-4 h-[32px]">Accumulo sicuro su Bitcoin senza leva finanziaria.</p>
+                
+                {/* FIX: Altezza fissa 120px per allineamento perfetto */}
+                <div className="space-y-2 mb-6 bg-slate-950/50 p-3 rounded-xl border border-slate-800/50 h-[120px] flex flex-col justify-center">
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Target 20-90% annuo</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> No Rischio Liquidazione</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Operatività Automatica</div>
+                </div>
+
+                <div className="mt-auto">
+                    {/* MODIFICATO: Prezzo 500 LIFETIME */}
+                    <div className="flex justify-between items-end mb-3 border-t border-slate-800 pt-3">
+                        <div className="text-xs text-slate-500">Prezzo</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-white">500€</span>
+                            <span className="text-[10px] text-emerald-400 font-bold uppercase">Lifetime</span>
+                        </div>
+                    </div>
+                    <button onClick={() => handleSelect('BTC Single', '500€', 'SINGLE')} className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                    Attiva BTC <TrendingUp size={16} />
+                    </button>
+                </div>
               </div>
             </div>
 
-            {/* CARD DUAL */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500 transition-all group relative flex flex-col h-full justify-between ring-1 ring-emerald-500/10 shadow-xl shadow-emerald-900/5">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full shadow-lg uppercase tracking-wider">
-                Consigliato
-              </div>
-              <div className="absolute top-4 right-4">
-                 <button onClick={() => openStrategy('DUAL')} className="text-slate-500 hover:text-emerald-400 transition-colors"><Info size={18} /></button>
-              </div>
+            {/* CARD 2: ANALYZER PRO */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-900/10 transition-all flex flex-col h-full justify-between relative overflow-visible group mt-0">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 animate-pulse pointer-events-none z-0"></div>
               
-              <div>
-                <div className="flex -space-x-2 mb-3">
-                   <div className="bg-amber-500/10 text-amber-500 w-10 h-10 flex items-center justify-center rounded-xl font-bold text-lg border-2 border-slate-900 z-10">₿</div>
-                   <div className="bg-indigo-500/10 text-indigo-500 w-10 h-10 flex items-center justify-center rounded-xl font-bold text-lg border-2 border-slate-900">Ξ</div>
-                </div>
-                <h3 className="font-bold text-white text-lg">Dual Engine</h3>
-                <p className="text-xs text-emerald-400/80 mt-1 mb-4">Diversificazione 60/40 dinamica.</p>
+              <div className="absolute -top-3 left-0 right-0 flex justify-center z-10">
+                <span className="bg-emerald-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-full shadow-lg uppercase tracking-wider">BEST SELLER</span>
               </div>
-              
-              <ul className="space-y-3 mb-6">
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Target</span> <span className="text-emerald-400 font-bold">14-20%</span>
-                </li>
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Trade</span> <span className="text-white">~63/anno</span>
-                </li>
-                <li className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Rischio</span> <span className="text-white font-medium flex items-center gap-1"><Zap size={12} className="text-yellow-400"/> Moderato</span>
-                </li>
-              </ul>
 
-              <div>
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-3xl font-bold text-white">49€</span>
-                  <span className="text-slate-500 text-sm">/mese</span>
-                  <span className="ml-auto text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">-20%</span>
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4 mt-2">
+                    <div className="flex gap-2">
+                        <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded-xl border border-emerald-500/20"><Zap size={18} /></div>
+                        <div className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase h-fit mt-0.5">AI Powered</div>
+                    </div>
+                    <button onClick={() => openStrategy('ANALYZER')} className="text-slate-500 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"><Info size={18} /></button>
                 </div>
-                <button 
-                  onClick={() => handleSelect('Dual Combo', '49€', 'DUAL')} 
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-colors"
-                >
-                  Attiva Dual System
-                </button>
+                
+                <h3 className="font-bold text-white text-lg mb-1">Analyzer Pro AI</h3>
+                <p className="text-xs text-slate-400 mb-4 h-[32px]">Analisi predittiva Futures su Telegram.</p>
+                
+                {/* FIX: Altezza fissa 120px */}
+                <div className="space-y-2 mb-6 bg-slate-950/50 p-3 rounded-xl border border-emerald-500/20 h-[120px] flex flex-col justify-center">
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Motore Gemini 2.5</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Analisi Futures (No Spot)</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Licenza A VITA</div>
+                </div>
+
+                <div className="mt-auto">
+                    <div className="flex justify-between items-end mb-3 border-t border-slate-800 pt-3">
+                        <div className="text-xs text-slate-500">Prezzo</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-white">99€</span>
+                            <span className="text-[10px] text-emerald-400 font-bold uppercase">Lifetime</span>
+                        </div>
+                    </div>
+                    <button onClick={() => handleSelect('Crypto Analyzer Pro', '99€', 'ANALYZER')} className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                    Acquista Licenza <Zap size={16} />
+                    </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CARD 3: DUAL ENGINE */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all flex flex-col h-full justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity group-hover:opacity-100 opacity-50 z-0"></div>
+              
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-2">
+                        <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded-xl border border-emerald-500/20"><Layers size={18} /></div>
+                        <div className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase h-fit mt-0.5">Balanced</div>
+                    </div>
+                    <button onClick={() => openStrategy('DUAL')} className="text-slate-500 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"><Info size={18} /></button>
+                </div>
+                
+                <h3 className="font-bold text-white text-lg mb-1">Dual Engine</h3>
+                <p className="text-xs text-slate-400 mb-4 h-[32px]">Strategia diversificata BTC + ETH.</p>
+                
+                {/* FIX: Altezza fissa 120px */}
+                <div className="space-y-2 mb-6 bg-slate-950/50 p-3 rounded-xl border border-slate-800/50 h-[120px] flex flex-col justify-center">
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> 60% BTC / 40% ETH</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Rebalancing Dinamico</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300"><CheckCircle size={12} className="text-emerald-500 shrink-0" /> Target 20-90%</div>
+                </div>
+
+                <div className="mt-auto">
+                    {/* MODIFICATO: Prezzo 500 LIFETIME */}
+                    <div className="flex justify-between items-end mb-3 border-t border-slate-800 pt-3">
+                        <div className="text-xs text-slate-500">Prezzo</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-white">500€</span>
+                            <span className="text-[10px] text-emerald-400 font-bold uppercase">Lifetime</span>
+                        </div>
+                    </div>
+                    <button onClick={() => handleSelect('Dual Combo', '500€', 'DUAL')} className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                    Attiva Dual <Layers size={16} />
+                    </button>
+                </div>
               </div>
             </div>
 
           </div>
         </div>
 
-        {/* --- COLONNA DESTRA (40%): Grafico --- */}
-        <div className="lg:col-span-5 flex flex-col h-full">
-           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 flex flex-col h-full min-h-[600px] relative overflow-hidden shadow-2xl">
-             
+        {/* --- COLONNA DESTRA (Grafico) --- */}
+        <div className="lg:col-span-5 flex flex-col h-full mt-4 lg:mt-0">
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 lg:p-8 flex flex-col h-full min-h-fit lg:min-h-[600px] relative overflow-hidden shadow-2xl">
              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[80px] rounded-full pointer-events-none"></div>
 
-             <div className="mb-8 relative z-10">
+             <div className="mb-8 relative z-0">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-1">
@@ -190,7 +236,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                 </div>
              </div>
 
-             <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
+             <div className="grid grid-cols-2 gap-4 mb-6 relative z-0">
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 backdrop-blur-sm">
                    <div className="text-[10px] text-slate-500 uppercase mb-1">Ritorno 3Y</div>
                    <div className="text-3xl font-bold text-emerald-400">+46.2%</div>
@@ -201,7 +247,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                 </div>
              </div>
 
-             <div className="mb-6 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3 relative z-10">
+             <div className="mb-6 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3 relative z-0">
                 <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-400">
                    <Calculator size={20} />
                 </div>
@@ -213,7 +259,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                 </div>
              </div>
 
-             <div className="flex-1 w-full min-h-[250px] relative z-10">
+             <div className="w-full relative z-0 mt-4 lg:mt-0" style={{ height: '300px', minHeight: '300px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -230,12 +276,12 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
                       formatter={(value) => [`$${value}`, 'Capitale']} 
                       labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '5px' }}
                     />
-                    <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fill="url(#colorVal)" animationDuration={2000} />
+                    <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fill="url(#colorVal)" animationDuration={1500} />
                   </AreaChart>
                 </ResponsiveContainer>
              </div>
 
-             <div className="mt-8 pt-6 border-t border-slate-800 relative z-10">
+             <div className="mt-8 pt-6 border-t border-slate-800 relative z-0">
                 <div className="flex items-center justify-between text-[10px] text-slate-500">
                    <span className="flex items-center gap-1"><CheckCircle size={12}/> Dati Blockchain</span>
                    <span className="flex items-center gap-1"><BarChart3 size={12}/> Aggiornato oggi</span>
@@ -246,8 +292,8 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
         </div>
       </div>
 
-      {/* --- DISCLAIMER FOOTER (Nuova Aggiunta) --- */}
-      <div className="mt-12 pt-6 border-t border-slate-800/50 text-center shrink-0 pb-4">
+      {/* --- DISCLAIMER FOOTER COMPLETO --- */}
+      <div className="mt-12 pt-6 border-t border-slate-800/50 text-center shrink-0 pb-4 relative z-0">
           <div className="flex items-center justify-center gap-2 text-slate-500 text-xs mb-2 uppercase font-bold tracking-wider">
               <AlertTriangle size={14} className="text-amber-500" />
               Disclaimer Legale & Rischi
