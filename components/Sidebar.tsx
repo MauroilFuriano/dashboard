@@ -149,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
 
           {/* --- INFO PRODOTTI (MODIFICATO: STILE NEON VERDE UNIFORME) --- */}
           <div className="pt-6 mt-4 border-t border-slate-800/50 space-y-4">
-             
+              
              <p className="px-4 text-[10px] uppercase font-bold text-slate-500 mb-1 tracking-wider">Info Prodotti</p>
 
              <div className="px-3 space-y-3">
@@ -167,7 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                     </div>
                 </div>
 
-                {/* 2. BOT AUTOMATICI - STILE NEON VERDE */}
+                {/* 2. BOT AUTOMATICI - MODIFICATO BITGET */}
                 <div className="relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group">
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-1.5">
@@ -175,20 +175,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                              <span className="text-white font-bold text-xs tracking-wide drop-shadow-[0_0_3px_rgba(52,211,153,0.5)]">BOT AUTOMATICI</span>
                         </div>
                         <p className="text-[10px] text-slate-400 leading-relaxed">
-                            Trading algoritmico 24/7 su <span className="text-emerald-400 font-medium">MEXC</span>.
+                            Bot automatici trading algoritmico 24 h su 24 su <span className="text-emerald-400 font-medium">Bitget</span>.
                         </p>
                     </div>
                 </div>
 
-                {/* 3. BONUS ATTIVO - STILE NEON VERDE (Uniformato agli altri) */}
-                <a href="https://promote.mexc.com/r/b2QRLbsk" target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group">
+                {/* 3. BONUS ATTIVO - LINK MODIFICATO BITGET */}
+                <a href="https://share.bitget.com/u/DRPUAUPG" target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group">
                     <div className="relative z-10 flex items-center justify-between">
                         <div>
                             <div className="flex items-center gap-2 mb-1.5">
                                 <div className="p-1 bg-emerald-500/10 rounded-md text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"><Gift size={14} /></div>
                                 <span className="text-white font-bold text-xs tracking-wide drop-shadow-[0_0_3px_rgba(52,211,153,0.5)]">BONUS ATTIVO</span>
                             </div>
-                            <p className="text-[10px] text-slate-400 font-medium">0% Commissioni Maker</p>
+                            <p className="text-[10px] text-slate-400 font-medium">0,1% Commissioni Maker</p>
                         </div>
                         <div className="bg-emerald-500/10 p-1.5 rounded-lg text-emerald-400"><ExternalLink size={14} /></div>
                     </div>
