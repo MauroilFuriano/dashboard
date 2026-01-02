@@ -134,7 +134,7 @@ const ActivationForm: React.FC = () => {
         <div>
             <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-                Credenziali MEXC
+                Credenziali Bitget
             </h3>
             <div className="grid grid-cols-1 gap-5">
             <div className="space-y-2">

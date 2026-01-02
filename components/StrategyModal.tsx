@@ -43,12 +43,12 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
                 <TrendingUp size={16} className="text-emerald-400" />
                 <span className="text-emerald-400 font-bold text-xs uppercase tracking-wider">Partner Ufficiale</span>
             </div>
-            <h4 className="text-white font-bold text-sm">Ottimizzato per MEXC Exchange</h4>
-            <p className="text-xs text-slate-400 mt-1">Zero Commissioni Maker (0%) & Bonus Benvenuto</p>
+            <h4 className="text-white font-bold text-sm">Ottimizzato per BITGET Exchange</h4>
+            <p className="text-xs text-slate-400 mt-1">Commissioni Ridotte & Bonus Benvenuto</p>
         </div>
 
         <a 
-            href="https://promote.mexc.com/r/b2QRLbsk" 
+            href="https://share.bitget.com/u/DRPUAUPG" 
             target="_blank" 
             rel="noopener noreferrer"
             className="relative z-10 bg-white text-slate-950 hover:bg-emerald-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
@@ -57,7 +57,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({ isOpen, onClose, type }) 
             <ExternalLink size={12} />
         </a>
     </div>
-  );
+);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">

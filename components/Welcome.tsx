@@ -84,7 +84,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                     
                     {/* Lista caratteristiche allineata */}
                     <div className="space-y-4 mb-6 bg-slate-950/50 p-5 rounded-xl border border-slate-800/50 flex-1 min-h-[200px] flex flex-col justify-center">
-                        <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Target 20-90% annuo</div>
+                        <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Target 35-60% annuo</div>
                         <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> No Rischio Liquidazione</div>
                         <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Operatività Automatica H4</div>
                         <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Gestione Rischio Dinamica</div>
