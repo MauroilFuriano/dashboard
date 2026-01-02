@@ -200,6 +200,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                 <a href="https://t.me/MauroilFurianoCryotoGalassia" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-xs font-medium bg-slate-900/50">
                     <Users size={14} /> Supporto Community
                 </a>
+   
+                <a href="https://t.me/cryptoanalyzer_officialbot" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-xs font-medium bg-slate-900/50">
+                    <MessageSquare size={14} /> Servizio Clienti
+                </a>
              </div>
 
           </div>
