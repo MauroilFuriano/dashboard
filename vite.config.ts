@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
     // ✅ OTTIMIZZAZIONI BUILD
     build: {
       target: 'es2020',
-      minify: 'terser',
+      minify: 'esbuild', // esbuild già incluso in Vite, non richiede terser
       cssMinify: true,
       rollupOptions: {
         output: {
