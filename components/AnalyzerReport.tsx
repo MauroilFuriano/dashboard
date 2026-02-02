@@ -35,9 +35,9 @@ const KPI_METRICS = {
 };
 
 const EXIT_REASONS_DATA = [
-  { name: 'Trailing Stop Hit', value: 66, color: '#10b981' }, 
-  { name: 'Stop Loss Hit', value: 24, color: '#f43f5e' },    
-  { name: 'End of Data', value: 1, color: '#3b82f6' },      
+  { name: 'Trailing Stop Hit', value: 66, color: '#10b981' },
+  { name: 'Stop Loss Hit', value: 24, color: '#f43f5e' },
+  { name: 'End of Data', value: 1, color: '#3b82f6' },
 ];
 
 const EQUITY_DATA = [
@@ -89,9 +89,8 @@ const KPICard = ({ label, value, subValue, icon: Icon, trend }: any) => (
         <Icon className="w-5 h-5 text-slate-400" />
       </div>
       {trend && (
-        <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${
-          trend === 'up' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-        }`}>
+        <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${trend === 'up' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+          }`}>
           {trend === 'up' ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
           {trend === 'up' ? 'Good' : 'Risk'}
         </span>
@@ -131,7 +130,7 @@ export default function AnalyzerReport() {
 
   return (
     <div className="bg-slate-950 text-slate-200 p-0 font-sans w-full">
-      
+
       {/* HEADER */}
       <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
@@ -144,52 +143,51 @@ export default function AnalyzerReport() {
           </p>
         </div>
         <div className="flex gap-2">
-            {['1Y', 'ALL'].map(range => (
-                <button 
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        timeRange === range 
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                        : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
-                    }`}
-                >
-                    {range}
-                </button>
-            ))}
-            <button className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white">
-                <Maximize2 size={18} />
+          {['1Y', 'ALL'].map(range => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeRange === range
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
+                }`}
+            >
+              {range}
             </button>
+          ))}
+          <button className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white">
+            <Maximize2 size={18} />
+          </button>
         </div>
       </header>
 
       {/* KPI GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KPICard 
-          label="Net Profit" 
-          value={`$${KPI_METRICS.netProfit.toLocaleString()}`} 
-          subValue={`+${KPI_METRICS.netProfitPct}%`} 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <KPICard
+          label="Net Profit"
+          value={`$${KPI_METRICS.netProfit.toLocaleString()}`}
+          subValue={`+${KPI_METRICS.netProfitPct}%`}
           icon={DollarSign}
           trend="up"
         />
-        <KPICard 
-          label="Profit Factor" 
-          value={KPI_METRICS.profitFactor} 
-          subValue="Gross P/L Ratio" 
+        <KPICard
+          label="Profit Factor"
+          value={KPI_METRICS.profitFactor}
+          subValue="Gross P/L Ratio"
           icon={TrendingUp}
           trend={KPI_METRICS.profitFactor > 1.5 ? 'up' : 'down'}
         />
-        <KPICard 
-          label="Win Rate" 
-          value={`${KPI_METRICS.winRate}%`} 
-          subValue={`${KPI_METRICS.totalTrades} Trades`} 
+        <KPICard
+          label="Win Rate"
+          value={`${KPI_METRICS.winRate}%`}
+          subValue={`${KPI_METRICS.totalTrades} Trades`}
           icon={Percent}
           trend={KPI_METRICS.winRate > 50 ? 'up' : 'down'}
         />
-        <KPICard 
-          label="Max Drawdown" 
-          value={`${KPI_METRICS.maxDrawdown}%`} 
-          subValue="Peak to Valley" 
+        <KPICard
+          label="Max Drawdown"
+          value={`${KPI_METRICS.maxDrawdown}%`}
+          subValue="Peak to Valley"
           icon={AlertTriangle}
           trend="down"
         />
@@ -197,114 +195,114 @@ export default function AnalyzerReport() {
 
       {/* GRAFICI BACKTEST */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        
+
         {/* COLONNA SINISTRA (2/3): Grafici Principali */}
-        <div className="lg:col-span-2 space-y-6">
-          
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+
           {/* EQUITY CURVE */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm h-[400px]">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm h-[400px] min-w-0">
             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-white">Equity Curve</h3>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Equity
-                    <span className="w-2 h-2 rounded-full bg-rose-500/50 ml-2"></span> Drawdown
-                </div>
+              <h3 className="text-lg font-semibold text-white">Equity Curve</h3>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Equity
+                <span className="w-2 h-2 rounded-full bg-rose-500/50 ml-2"></span> Drawdown
+              </div>
             </div>
-            
+
             <ResponsiveContainer width="100%" height="85%">
               <AreaChart data={EQUITY_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis 
-                    dataKey="date" 
-                    stroke="#64748b" 
-                    fontSize={12} 
-                    tickFormatter={(str) => {
-                        const date = new Date(str);
-                        return `${date.getMonth() + 1}/${date.getFullYear().toString().substr(2)}`;
-                    }}
-                    minTickGap={30}
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickFormatter={(str) => {
+                    const date = new Date(str);
+                    return `${date.getMonth() + 1}/${date.getFullYear().toString().substr(2)}`;
+                  }}
+                  minTickGap={30}
                 />
-                <YAxis 
-                    stroke="#64748b" 
-                    fontSize={12} 
-                    tickFormatter={(val) => `$${val/1000}k`}
-                    domain={['auto', 'auto']}
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickFormatter={(val) => `$${val / 1000}k`}
+                  domain={['auto', 'auto']}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Area 
-                  type="monotone" 
-                  dataKey="equity" 
-                  stroke="#10b981" 
+                <Area
+                  type="monotone"
+                  dataKey="equity"
+                  stroke="#10b981"
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorEquity)" 
+                  fillOpacity={1}
+                  fill="url(#colorEquity)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* UNDERWATER PLOT */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm h-[200px]">
-             <h3 className="text-sm font-semibold text-slate-400 mb-4">Underwater Drawdown</h3>
-             <ResponsiveContainer width="100%" height="80%">
-                <AreaChart data={EQUITY_DATA} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="date" hide />
-                    <YAxis stroke="#64748b" fontSize={10} tickFormatter={(v) => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="step" dataKey="dd" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} />
-                </AreaChart>
-             </ResponsiveContainer>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm h-[200px] min-w-0">
+            <h3 className="text-sm font-semibold text-slate-400 mb-4">Underwater Drawdown</h3>
+            <ResponsiveContainer width="100%" height="80%">
+              <AreaChart data={EQUITY_DATA} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="date" hide />
+                <YAxis stroke="#64748b" fontSize={10} tickFormatter={(v) => `${v}%`} />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="step" dataKey="dd" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
         {/* COLONNA DESTRA (1/3): Pie Chart */}
         <div className="space-y-6">
-      
-            {/* EXIT REASON DISTRIBUTION */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col items-center">
-                <h3 className="text-lg font-semibold text-white w-full mb-2">Exit Distribution</h3>
-                <div className="w-full h-[180px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={EXIT_REASONS_DATA}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={50}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {EXIT_REASONS_DATA.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                                ))}
-                            </Pie>
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
-                                itemStyle={{ color: '#e2e8f0' }}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="w-full space-y-2 mt-4">
-                    {EXIT_REASONS_DATA.map((item) => (
-                        <div key={item.name} className="flex justify-between items-center text-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></span>
-                                <span className="text-slate-400">{item.name}</span>
-                            </div>
-                            <span className="text-white font-medium">{item.value} trades</span>
-                        </div>
+
+          {/* EXIT REASON DISTRIBUTION */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col items-center">
+            <h3 className="text-lg font-semibold text-white w-full mb-2">Exit Distribution</h3>
+            <div className="w-full h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={EXIT_REASONS_DATA}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {EXIT_REASONS_DATA.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                     ))}
-                </div>
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                    itemStyle={{ color: '#e2e8f0' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
+            <div className="w-full space-y-2 mt-4">
+              {EXIT_REASONS_DATA.map((item) => (
+                <div key={item.name} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    <span className="text-slate-400">{item.name}</span>
+                  </div>
+                  <span className="text-white font-medium">{item.value} trades</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
         </div>
       </div>

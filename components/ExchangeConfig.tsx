@@ -21,8 +21,8 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
         <div>
           <h3 className="text-amber-500 font-bold text-lg">ATTENZIONE: Sicurezza Fondi</h3>
           <p className="text-amber-200/80 text-sm mt-1 leading-relaxed">
-            Durante la creazione delle API, <span className="font-bold text-white underline">NON abilitare</span> mai l'opzione "Withdrawal" (Prelievo). 
-            Il bot necessita solo dei permessi di <strong>Trading (Spot/Futures)</strong> e <strong>Lettura</strong>. 
+            Durante la creazione delle API, <span className="font-bold text-white underline">NON abilitare</span> mai l'opzione "Withdrawal" (Prelievo).
+            Il bot necessita solo dei permessi di <strong>Trading (Spot/Futures)</strong> e <strong>Lettura</strong>.
             In questo modo i tuoi fondi rimangono sempre al sicuro.
           </p>
         </div>
@@ -38,18 +38,19 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
               <p className="text-slate-400 text-sm mt-1 mb-3">
                 Fai il login. Se non hai un account, usa il link partner qui sotto per registrarti con vantaggi esclusivi.
               </p>
-              <a 
-                href="https://share.bitget.com/u/DRPUAUPG" 
-                target="_blank" 
+              <a
+                href="https://share.bitget.com/u/DRPUAUPG"
+                target="_blank"
                 rel="noreferrer"
+                aria-label="Registrati su BITGET con link referral per vantaggi esclusivi"
                 className="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-brand-900/20"
               >
-                <span>Registrati su BITGET (Referral)</span>
+                <span>Registrati su BITGET (Referral con Bonus)</span>
                 <ExternalLink size={14} />
               </a>
             </div>
           </div>
-          
+
           <div className="flex space-x-4">
             <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700">2</div>
             <div>
@@ -101,7 +102,7 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
             <div>
               <h4 className="text-lg font-medium text-brand-400">Salva le Chiavi</h4>
               <p className="text-slate-400 text-sm mt-1">
-                Dopo la creazione, copia immediatamente <strong>Access Key</strong>, <strong>Secret Key</strong> e <strong>Passphrase</strong>. 
+                Dopo la creazione, copia immediatamente <strong>Access Key</strong>, <strong>Secret Key</strong> e <strong>Passphrase</strong>.
                 La Secret Key verrà mostrata una sola volta!
               </p>
             </div>
@@ -110,39 +111,39 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
 
         {/* Tutorial Interattivo AI - IFRAME FULL SCREEN */}
         <div className="flex flex-col space-y-4">
-             <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
-                <div className="bg-slate-800 px-4 py-3 text-xs font-medium text-slate-400 border-b border-slate-700 flex items-center justify-between">
-                    <span className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Tutorial Interattivo AI - Configurazione BITGET</span>
-                    </span>
-                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px] font-bold border border-emerald-500/20">LIVE ASSISTANT</span>
-                </div>
-                
-                {/* IFRAME TUTORIAL AI */}
-                <div className="relative bg-black" style={{ height: '600px' }}>
-                    <iframe 
-                      src="https://safetrade-mentor.vercel.app/" 
-                      className="w-full h-full border-0"
-                      title="Tutorial AI BITGET"
-                      allow="clipboard-write"
-                      sandbox="allow-same-origin allow-scripts allow-forms"
-                    />
-                </div>
-
-                <div className="p-4 bg-slate-900/50 border-t border-slate-800">
-                    <h4 className="font-bold text-white text-sm">💬 Assistente AI Interattivo</h4>
-                    <p className="text-slate-500 text-xs mt-1 leading-relaxed">
-                    Chatta con l'AI per ottenere supporto passo-passo nella creazione delle chiavi API su BITGET. 
-                    <span className="text-amber-500 font-semibold"> Ricorda: NO Withdrawal</span>.
-                    </p>
-                </div>
+          <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-2xl shadow-black/50">
+            <div className="bg-slate-800 px-4 py-3 text-xs font-medium text-slate-400 border-b border-slate-700 flex items-center justify-between">
+              <span className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Tutorial Interattivo AI - Configurazione BITGET</span>
+              </span>
+              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px] font-bold border border-emerald-500/20">LIVE ASSISTANT</span>
             </div>
+
+            {/* IFRAME TUTORIAL AI */}
+            <div className="relative bg-black" style={{ height: '600px' }}>
+              <iframe
+                src="https://safetrade-mentor.vercel.app/"
+                className="w-full h-full border-0"
+                title="Tutorial AI BITGET"
+                allow="clipboard-write"
+                sandbox="allow-same-origin allow-scripts allow-forms"
+              />
+            </div>
+
+            <div className="p-4 bg-slate-900/50 border-t border-slate-800">
+              <h4 className="font-bold text-white text-sm">💬 Assistente AI Interattivo</h4>
+              <p className="text-slate-500 text-xs mt-1 leading-relaxed">
+                Chatta con l'AI per ottenere supporto passo-passo nella creazione delle chiavi API su BITGET.
+                <span className="text-amber-500 font-semibold"> Ricorda: NO Withdrawal</span>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex justify-end pt-6">
-        <button 
+        <button
           onClick={onNext}
           className="group flex items-center space-x-2 bg-white text-slate-950 px-6 py-3 rounded-lg font-semibold hover:bg-slate-200 transition-all"
         >

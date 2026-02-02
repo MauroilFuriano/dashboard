@@ -15,9 +15,9 @@ const validatePassword = (password: string) => {
     number: /[0-9]/.test(password),
     special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
   };
-  
+
   const strength = Object.values(checks).filter(Boolean).length;
-  
+
   return { checks, strength };
 };
 
@@ -28,7 +28,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Password validation
   const passwordValidation = validatePassword(password);
   const isPasswordValid = passwordValidation.strength >= 4; // Almeno 4/5 requisiti
@@ -96,8 +96,8 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-8 relative overflow-hidden">
-         {/* Decorative bg */}
-         <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mt-10"></div>
+        {/* Decorative bg */}
+        <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mt-10"></div>
 
         <div className="text-center mb-8 relative z-10">
           <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -127,6 +127,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 className="block w-full pl-10 pr-3 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 placeholder="nome@esempio.com"
               />
@@ -146,12 +147,14 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 className="block w-full pl-10 pr-10 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 placeholder="Min. 8 caratteri"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Nascondi password" : "Mostra password"}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -165,18 +168,16 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`h-1 flex-1 rounded-full transition-all ${
-                        level <= passwordValidation.strength ? getStrengthColor() : 'bg-slate-800'
-                      }`}
+                      className={`h-1 flex-1 rounded-full transition-all ${level <= passwordValidation.strength ? getStrengthColor() : 'bg-slate-800'
+                        }`}
                     />
                   ))}
                 </div>
                 <p className="text-xs text-slate-400">
-                  Sicurezza: <span className={`font-medium ${
-                    passwordValidation.strength >= 4 ? 'text-emerald-400' : 
-                    passwordValidation.strength === 3 ? 'text-blue-400' :
-                    'text-yellow-400'
-                  }`}>
+                  Sicurezza: <span className={`font-medium ${passwordValidation.strength >= 4 ? 'text-emerald-400' :
+                      passwordValidation.strength === 3 ? 'text-blue-400' :
+                        'text-yellow-400'
+                    }`}>
                     {getStrengthText()}
                   </span>
                 </p>

@@ -21,13 +21,13 @@ const App: React.FC = () => {
   // --- STATI ---
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  
+
   const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
-  
+
   const [activePlan, setActivePlan] = useState<string | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState<Tab>(Tab.WELCOME);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -70,33 +70,70 @@ const App: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('pagamenti')
-        .select('piano, stato') 
+        .select('piano, stato')
         .eq('user_email', email);
 
       if (error) {
-        console.error("Errore check pagamento:", error);
+        // ✅ NUOVO: Log solo in development
+        if (import.meta.env.DEV) {
+          console.error("Errore check pagamento:", error);
+        }
       }
-
       if (data && data.length > 0) {
         // Filtra solo i piani approvati
         const approvedPlans = data
-            .filter(row => row.stato === 'approved')
-            .map(row => row.piano)
-            .join(' ');
+          .filter(row => row.stato === 'approved')
+          .map(row => row.piano)
+          .join(' ');
 
         if (approvedPlans.length > 0) {
-             setActivePlan(approvedPlans);
+          setActivePlan(approvedPlans);
         } else {
-             setActivePlan(null);
+          setActivePlan(null);
         }
       }
     } catch (err) {
-      console.error(err);
+      // ✅ NUOVO: Log solo in development
+      if (import.meta.env.DEV) {
+        console.error(err);
+      }
     } finally {
       setCheckingPayment(false);
       setAuthLoading(false);
     }
   };
+
+  // ✅ REALTIME SUBSCRIPTION PER PAYMENT STATUS
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    const channel = supabase
+      .channel('payment-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pagamenti',
+          filter: `user_email=eq.${session.user.email}`
+        },
+        (payload: any) => {
+          checkUserPayment(session.user.email);
+
+          if (payload.new?.stato === 'approved') {
+            toast.success('🎉 Pagamento Approvato! Piano attivato.', {
+              duration: 6000,
+              style: { background: '#10b981', color: '#fff', fontWeight: 'bold' }
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session]);
 
   // Funzione per aprire il login manualmente
   const triggerLogin = () => {
@@ -106,7 +143,7 @@ const App: React.FC = () => {
   };
 
   // --- LOGICA VISUALIZZAZIONE ---
-  
+
   // Determina se mostrare l'overlay di Login/Register
   // Lo mostriamo se:
   // 1. showAuth è true (cliccato su "Accedi")
@@ -117,27 +154,27 @@ const App: React.FC = () => {
   const renderMainContent = () => {
     switch (activeTab) {
       case Tab.WELCOME:
-        return <Welcome 
+        return <Welcome
           onNext={(productType) => {
             toast.success('Richiesta inviata! In attesa di verifica.', {
-                duration: 6000,
-                style: { background: '#eab308', color: '#fff', border: 'none', fontWeight: 'bold' },
-                iconTheme: { primary: '#fff', secondary: '#eab308' },
+              duration: 6000,
+              style: { background: '#eab308', color: '#fff', border: 'none', fontWeight: 'bold' },
+              iconTheme: { primary: '#fff', secondary: '#eab308' },
             });
-          }} 
-          onAuthRequired={triggerLogin} 
+          }}
+          onAuthRequired={triggerLogin}
           isLoggedIn={!!session}
         />;
-      case Tab.ANALYZER: 
+      case Tab.ANALYZER:
         return <AnalyzerBotPage />;
-      case Tab.EXCHANGE: 
+      case Tab.EXCHANGE:
         return <ExchangeConfig onNext={() => setActiveTab(Tab.TELEGRAM)} />;
-      case Tab.TELEGRAM: 
+      case Tab.TELEGRAM:
         return <TelegramConfig onNext={() => setActiveTab(Tab.ACTIVATION)} />;
-      case Tab.ACTIVATION: 
+      case Tab.ACTIVATION:
         return <ActivationForm />;
-      default: 
-        return <Welcome onNext={() => {}} onAuthRequired={triggerLogin} isLoggedIn={!!session} />;
+      default:
+        return <Welcome onNext={() => { }} onAuthRequired={triggerLogin} isLoggedIn={!!session} />;
     }
   };
 
@@ -147,27 +184,27 @@ const App: React.FC = () => {
 
     return (
       <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col h-full w-full overflow-y-auto animate-in fade-in duration-300">
-             {/* Header Overlay: Torna alla Home */}
-             <div className="p-4 absolute top-0 left-0 z-10">
-                <button 
-                  onClick={() => {
-                    setShowAuth(false);
-                    setActiveTab(Tab.WELCOME); // Torna alla home se annulli
-                  }} 
-                  className="text-slate-400 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm border border-slate-800 transition-colors"
-                >
-                    <span className="text-xl">&larr;</span> Home
-                </button>
-             </div>
+        {/* Header Overlay: Torna alla Home */}
+        <div className="p-4 absolute top-0 left-0 z-10">
+          <button
+            onClick={() => {
+              setShowAuth(false);
+              setActiveTab(Tab.WELCOME); // Torna alla home se annulli
+            }}
+            className="text-slate-400 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm border border-slate-800 transition-colors"
+          >
+            <span className="text-xl">&larr;</span> Home
+          </button>
+        </div>
 
-             {/* Contenuto Login/Register */}
-             <div className="flex-1 flex items-center justify-center p-4 min-h-screen">
-               {authView === 'login' ? (
-                  <Login onSwitchToRegister={() => setAuthView('register')} />
-               ) : (
-                  <Register onSwitchToLogin={() => setAuthView('login')} />
-               )}
-             </div>
+        {/* Contenuto Login/Register */}
+        <div className="flex-1 flex items-center justify-center p-4 min-h-screen">
+          {authView === 'login' ? (
+            <Login onSwitchToRegister={() => setAuthView('register')} />
+          ) : (
+            <Register onSwitchToLogin={() => setAuthView('login')} />
+          )}
+        </div>
       </div>
     );
   };
@@ -175,10 +212,16 @@ const App: React.FC = () => {
   // Loading Screen Iniziale
   if (authLoading || checkingPayment) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-950">
+      <div
+        className="flex h-screen w-full items-center justify-center bg-slate-950"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-            <p className="text-slate-400 text-sm">Caricamento CryptoBot Elite...</p>
+          <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+          <p className="text-slate-400 text-sm">Caricamento CryptoBot Elite...</p>
+          <span className="sr-only">Caricamento in corso, attendere prego.</span>
         </div>
       </div>
     );
@@ -187,25 +230,37 @@ const App: React.FC = () => {
   // --- LAYOUT PRINCIPALE ---
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden relative">
-      
+
       {/* 1. NOTIFICHE TOAST */}
-      <Toaster 
-        position="top-center" 
-        toastOptions={{ 
-            className: 'toast-custom', 
-            style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' }
-        }} 
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 'env(safe-area-inset-top, 16px)',
+          paddingTop: '16px'
+        }}
+        toastOptions={{
+          className: 'toast-custom',
+          style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' }
+        }}
       />
-      
+
+      {/* ✅ SKIP NAVIGATION LINK */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold focus:shadow-lg"
+      >
+        Salta al contenuto principale
+      </a>
+
       {/* 2. OVERLAY AUTH (Login/Register) - Sempre sopra a tutto */}
       {renderAuthOverlay()}
 
       {/* 3. SIDEBAR DESKTOP */}
-      <Sidebar 
-        activeTab={activeTab} 
+      <Sidebar
+        activeTab={activeTab}
         setActiveTab={(tab) => {
-            setActiveTab(tab);
-            if (tab === Tab.WELCOME) setShowAuth(false);
+          setActiveTab(tab);
+          if (tab === Tab.WELCOME) setShowAuth(false);
         }}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
@@ -217,53 +272,53 @@ const App: React.FC = () => {
 
       {/* 4. AREA CONTENUTO PRINCIPALE */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
-        
+
         {/* A. HEADER MOBILE (Visibile solo < 1024px) */}
         <header className="lg:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between shrink-0 z-10">
           <span className="font-bold text-white text-lg">CryptoBot Elite</span>
-          
+
           <div className="flex items-center gap-3">
-             {session ? (
-               // Se loggato: Mostra menu utente
-               <UserMenu email={session.user.email} activePlan={activePlan} />
-             ) : (
-               // Se sloggato: Mostra tasto Accedi (QUESTO MANCAVA PRIMA!)
-               <button 
-                 onClick={triggerLogin}
-                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-emerald-500/20"
-               >
-                 Accedi
-               </button>
-             )}
-             
-             {/* Tasto Menu Hamburger */}
-             <button 
-                onClick={() => setIsMobileOpen(true)} 
-                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
-             >
-                <Menu size={24} />
-             </button>
+            {session ? (
+              // Se loggato: Mostra menu utente
+              <UserMenu email={session.user.email} activePlan={activePlan} />
+            ) : (
+              // Se sloggato: Mostra tasto Accedi (QUESTO MANCAVA PRIMA!)
+              <button
+                onClick={triggerLogin}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-emerald-500/20"
+              >
+                Accedi
+              </button>
+            )}
+
+            {/* Tasto Menu Hamburger */}
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              <Menu size={24} />
+            </button>
           </div>
         </header>
 
         {/* B. HEADER DESKTOP (Visibile solo >= 1024px) */}
         <header className="hidden lg:flex bg-transparent p-6 justify-end items-center shrink-0 z-20 absolute top-0 right-0 w-full pointer-events-none">
-           <div className="pointer-events-auto">
-              {session ? (
-                  <UserMenu email={session.user.email} activePlan={activePlan} />
-              ) : (
-                  <button 
-                    onClick={triggerLogin}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
-                  >
-                    Accedi al Pannello
-                  </button>
-              )}
-           </div>
+          <div className="pointer-events-auto">
+            {session ? (
+              <UserMenu email={session.user.email} activePlan={activePlan} />
+            ) : (
+              <button
+                onClick={triggerLogin}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+              >
+                Accedi al Pannello
+              </button>
+            )}
+          </div>
         </header>
 
         {/* C. CONTENUTO SCROLLABILE */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth pt-6 lg:pt-20 pb-24 lg:pb-10 w-full">
+        <div id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth pt-6 lg:pt-20 pb-24 lg:pb-10 w-full">
           <div className="max-w-6xl mx-auto">
             {renderMainContent()}
           </div>
@@ -272,12 +327,12 @@ const App: React.FC = () => {
         {/* D. NAVIGAZIONE MOBILE (Bottom Bar) */}
         {/* Nascondiamo la navbar se l'overlay di auth è visibile per evitare sovrapposizioni */}
         {!isAuthOverlayVisible && (
-          <MobileNav 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-              activePlan={activePlan}
-              isLoggedIn={!!session}
-              onLoginClick={triggerLogin}
+          <MobileNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            activePlan={activePlan}
+            isLoggedIn={!!session}
+            onLoginClick={triggerLogin}
           />
         )}
 

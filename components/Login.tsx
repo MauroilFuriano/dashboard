@@ -10,16 +10,16 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // STATO AGGIUNTO per gestire la visibilità della password
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // NUOVO CONTROLLO DI SICUREZZA
     if (!email || !password) {
       toast.error("Inserisci email e password");
@@ -45,7 +45,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-8 relative overflow-hidden">
-        
+
         {/* Decorative bg */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
 
@@ -75,6 +75,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 className="block w-full pl-10 pr-3 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 placeholder="nome@esempio.com"
               />
@@ -93,17 +94,43 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 className="block w-full pl-10 pr-10 py-2.5 border border-slate-800 rounded-lg bg-slate-950 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 placeholder="••••••••"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Nascondi password" : "Mostra password"}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 outline-none"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+
+          {/* ✅ FORGOT PASSWORD LINK */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email) {
+                  toast.error('Inserisci la tua email prima');
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: window.location.origin + '/reset-password'
+                });
+                if (error) {
+                  toast.error('Errore invio email: ' + error.message);
+                } else {
+                  toast.success('Email di recupero inviata! Controlla la posta.');
+                }
+              }}
+              className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+            >
+              Password dimenticata?
+            </button>
           </div>
 
           <button
