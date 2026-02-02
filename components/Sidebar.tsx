@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
         w-72 bg-slate-900 border-r border-slate-800 flex flex-col
         transform transition-transform duration-300 ease-in-out will-change-transform
         ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
-      `} style={{ transform: isMobileOpen ? 'translateX(0) translateZ(0)' : 'translateX(-100%) translateZ(0)' }}>
+      `}>
         {/* HEADER LOGO */}
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
           <div className="flex items-center gap-3">
