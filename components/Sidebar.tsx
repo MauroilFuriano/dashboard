@@ -105,17 +105,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
             let isLocked = false;
             const plan = activePlan ? activePlan.toUpperCase() : "";
 
-            if (item.id !== Tab.WELCOME) {
+            // ✅ MODIFICA: ANALYZER sempre accessibile per utenti autenticati (modalità FREEMIUM)
+            if (item.id !== Tab.WELCOME && item.id !== Tab.ANALYZER) {
               if (!isLoggedIn) {
                 isLocked = true;
               } else {
-                if (item.id === Tab.ANALYZER) {
-                  if (!plan.includes('ANALYZER')) isLocked = true;
-                }
-                else if (['EXCHANGE', 'TELEGRAM', 'ACTIVATION'].includes(item.id)) {
+                // Blocca solo le sezioni BOT (Exchange, Telegram, Activation) se non ha piano
+                if (['EXCHANGE', 'TELEGRAM', 'ACTIVATION'].includes(item.id)) {
                   if (!plan.includes('BTC') && !plan.includes('DUAL') && !plan.includes('SINGLE')) isLocked = true;
                 }
               }
+            }
+            // ANALYZER richiede solo login
+            if (item.id === Tab.ANALYZER && !isLoggedIn) {
+              isLocked = true;
             }
 
             return (

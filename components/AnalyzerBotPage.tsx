@@ -1,20 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Copy, ExternalLink, Zap, Terminal, BarChart2, BookOpen, Loader2, CheckCircle, Bell } from 'lucide-react';
+import { ShieldCheck, Copy, ExternalLink, Zap, Terminal, BarChart2, BookOpen, Loader2, CheckCircle, Bell, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
 
 // ⚠️ INSERISCI QUI IL TUO USERNAME BOT (Senza @)
 const BOT_USERNAME = "cryptoanalyzer_AI_Bot";
 
+/**
+ * Pagina Crypto Analyzer Pro
+ * - Modalità FREEMIUM per utenti non paganti
+ * - Link attivazione per utenti con status=approved
+ * - Info scadenza per utenti con status=activated
+ */
 const AnalyzerBotPage: React.FC = () => {
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
-  const [status, setStatus] = useState<'pending' | 'approved' | null>(null);
+  const [status, setStatus] = useState<'pending' | 'approved' | 'activated' | null>(null);
+  const [activationToken, setActivationToken] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [hasPaid, setHasPaid] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [pollInterval, setPollInterval] = useState(5000); // ✅ Smart polling
-  const maxInterval = 30000; // ✅ Max 30s backoff
+  const [pollInterval, setPollInterval] = useState(5000);
+  const maxInterval = 30000;
 
   // Funzione di controllo stato
   const checkStatus = async () => {
@@ -23,7 +32,7 @@ const AnalyzerBotPage: React.FC = () => {
       if (user?.email) {
         const { data } = await supabase
           .from('pagamenti')
-          .select('stato, codice')
+          .select('stato, codice, activation_token, expires_at')
           .eq('user_email', user.email)
           .ilike('piano', '%Analyzer%')
           .order('id', { ascending: false })
@@ -32,6 +41,15 @@ const AnalyzerBotPage: React.FC = () => {
 
         if (data) {
           setStatus(data.stato);
+          setHasPaid(true);
+
+          if (data.activation_token) {
+            setActivationToken(data.activation_token);
+          }
+
+          if (data.expires_at) {
+            setExpiresAt(data.expires_at);
+          }
 
           if (data.codice && data.codice.length > 5) {
             setLicenseKey(data.codice);
@@ -53,6 +71,10 @@ const AnalyzerBotPage: React.FC = () => {
               intervalRef.current = null;
             }
           }
+        } else {
+          // L'utente non ha pagato per Analyzer
+          setHasPaid(false);
+          setStatus(null);
         }
       }
     } catch (error) {
@@ -65,16 +87,13 @@ const AnalyzerBotPage: React.FC = () => {
   useEffect(() => {
     checkStatus();
 
-    // ✅ SMART POLLING: Stop quando tab nascosta
     const startPolling = () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
 
       intervalRef.current = setInterval(() => {
-        // Solo se tab visibile
         if (document.visibilityState === 'visible') {
           checkStatus();
 
-          // Exponential backoff se licenza non ancora pronta
           if (!licenseKey) {
             setPollInterval(prev => Math.min(prev * 1.5, maxInterval));
           }
@@ -84,7 +103,6 @@ const AnalyzerBotPage: React.FC = () => {
 
     startPolling();
 
-    // Listener visibility change
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkStatus();
@@ -100,7 +118,7 @@ const AnalyzerBotPage: React.FC = () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [pollInterval, licenseKey]); // ✅ Dependencies
+  }, [pollInterval, licenseKey]);
 
   // --- FUNZIONE COPIA ---
   const handleCopy = async () => {
@@ -136,8 +154,24 @@ const AnalyzerBotPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Formatta la data di scadenza
+  const formatExpiryDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  /**
+   * Renderizza il contenuto della sezione Licenza in base allo stato:
+   * - NON PAGATO: Modalità FREEMIUM con pulsante "Acquista PRO"
+   * - APPROVED: Link Telegram per attivare il bot PRO
+   * - ACTIVATED: Info licenza attiva con data scadenza
+   */
   const renderLicenseContent = () => {
-    // ✅ SKELETON ANIMATO INVECE DI SPINNER GENERICO
+    // Skeleton durante il caricamento
     if (loading) return (
       <div className="flex flex-col gap-3 w-full animate-pulse">
         <div className="h-4 bg-slate-800 rounded w-32"></div>
@@ -146,45 +180,102 @@ const AnalyzerBotPage: React.FC = () => {
       </div>
     );
 
-    if (licenseKey) {
+    // ✅ CASO 1: LICENZA ATTIVATA (status = activated)
+    if (status === 'activated' && expiresAt) {
       return (
-        <>
-          {/* FIX: Aggiunto margine inferiore su mobile (mb-4) e larghezza piena */}
-          <div className="flex flex-col items-start animate-in fade-in zoom-in duration-500 w-full sm:w-auto relative z-20 mb-4 sm:mb-0">
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">Licenza Attiva</span>
-            {/* FIX: Break-all per mandare a capo il codice lungo */}
-            <code className="text-xl sm:text-2xl font-mono text-white tracking-wider font-bold select-all break-all bg-slate-900/50 px-2 py-1 rounded-lg">
-              {licenseKey}
-            </code>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-between animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+              <CheckCircle className="text-emerald-400" size={28} />
+            </div>
+            <div>
+              <span className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider">Licenza Attiva</span>
+              <p className="text-white font-bold text-lg">✅ Modalità PRO</p>
+            </div>
           </div>
-
-          {/* FIX: Bottone a tutta larghezza su mobile (w-full) e centrato */}
-          <button
-            onClick={handleCopy}
-            className={`relative z-20 flex items-center justify-center w-full sm:w-auto gap-2 px-5 py-3 rounded-xl transition-all text-sm font-bold shadow-lg cursor-pointer
-                        ${copied
-                ? 'bg-emerald-600 text-white scale-95'
-                : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 hover:text-white hover:-translate-y-1'
-              }`}
-          >
-            {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
-            {copied ? 'Copiato!' : 'Copia'}
-          </button>
-        </>
+          <div className="text-center sm:text-right bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700">
+            <span className="text-[10px] text-slate-500 uppercase">Scadenza</span>
+            <p className="text-white font-mono font-bold">{formatExpiryDate(expiresAt)}</p>
+          </div>
+        </div>
       );
     }
 
-    return (
-      <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center py-2 animate-pulse">
-        <div className="flex items-center gap-2">
-          <Loader2 size={20} className="text-yellow-500 animate-spin" />
-          <span className="text-yellow-500 font-mono text-sm font-bold">
-            GENERAZIONE IN CORSO...
+    // ✅ CASO 2: APPROVATO (status = approved) - Mostra link attivazione
+    if (status === 'approved' && activationToken) {
+      const activationLink = `https://t.me/${BOT_USERNAME}?start=PAY_${activationToken}`;
+
+      return (
+        <div className="flex flex-col gap-4 w-full animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center animate-pulse">
+              <Crown className="text-yellow-400" size={28} />
+            </div>
+            <div>
+              <span className="text-[11px] text-yellow-400 font-bold uppercase tracking-wider">Pagamento Approvato</span>
+              <p className="text-white font-bold">Pronto per l'attivazione!</p>
+            </div>
+          </div>
+
+          <a
+            href={activationLink}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-1 animate-pulse"
+          >
+            <Sparkles size={22} />
+            Attiva il tuo Bot PRO
+            <ArrowRight size={20} />
+          </a>
+
+          <p className="text-[11px] text-slate-500 text-center">
+            Clicca il pulsante sopra → Il premium si attiverà automaticamente!
+          </p>
+        </div>
+      );
+    }
+
+    // ✅ CASO 3: PENDING - In attesa di approvazione
+    if (status === 'pending') {
+      return (
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center py-2 animate-pulse">
+          <div className="flex items-center gap-2">
+            <Loader2 size={20} className="text-yellow-500 animate-spin" />
+            <span className="text-yellow-500 font-mono text-sm font-bold">
+              VERIFICA PAGAMENTO IN CORSO...
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+            Riceverai una notifica quando approvato
           </span>
         </div>
-        <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
-          Non chiudere, si aggiornerà da solo
-        </span>
+      );
+    }
+
+    // ✅ CASO 4: NON HA PAGATO - Mostra modalità FREEMIUM
+    return (
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-between animate-in fade-in">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
+            <Zap className="text-slate-400" size={24} />
+          </div>
+          <div>
+            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Modalità Attuale</span>
+            <p className="text-white font-bold text-lg">🆓 FREEMIUM</p>
+            <p className="text-[11px] text-slate-500">Funzionalità limitate</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            // Naviga alla sezione Benvenuto per acquistare
+            toast('Vai alla sezione "Benvenuto" per acquistare PRO!', { icon: '👉' });
+          }}
+          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-1"
+        >
+          <Crown size={18} />
+          Acquista PRO
+        </button>
       </div>
     );
   };
@@ -222,8 +313,8 @@ const AnalyzerBotPage: React.FC = () => {
               La tua Licenza Personale
             </h3>
 
-            {/* FIX: Layout a colonna su mobile (flex-col) e riga su desktop (sm:flex-row) */}
-            <div className="bg-slate-950 rounded-xl p-5 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 min-h-[100px] relative z-20">
+            {/* Contenuto dinamico in base allo stato */}
+            <div className="bg-slate-950 rounded-xl p-5 border border-slate-800 flex flex-col items-center justify-center gap-4 min-h-[100px] relative z-20">
               {renderLicenseContent()}
             </div>
 
@@ -257,22 +348,42 @@ const AnalyzerBotPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ISTRUZIONI A DESTRA */}
+        {/* GUIDA RAPIDA - AGGIORNATA */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
           <h3 className="text-white font-bold mb-4">Guida Rapida</h3>
-          <ol className="space-y-4 text-sm text-slate-400 list-decimal pl-4">
-            <li>Clicca su <strong>Apri il Bot Telegram</strong>.</li>
-            <li>Premi <strong>Avvia</strong> (/start) nel bot.</li>
-            <li>Attendi che la licenza appaia qui a sinistra.</li>
-            <li>Copia il codice con il tasto verde.</li>
-            <li>Incolla nel bot: <code>/activate CODICE</code>.</li>
+          <ol className="space-y-3 text-sm text-slate-400 list-decimal pl-4">
+            <li>Clicca su <strong className="text-white">Apri il Bot Telegram</strong>.</li>
+            <li>Premi <strong className="text-white">Avvia</strong> (/start) nel bot.</li>
+            <li>Il bot funziona in modalità <strong className="text-emerald-400">FREEMIUM</strong> (gratis con limiti).</li>
           </ol>
 
-          <div className="mt-6 pt-4 border-t border-slate-800">
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <Bell size={12} className="animate-swing text-yellow-500" />
-              <span>La pagina si aggiorna automaticamente.</span>
-            </div>
+          {/* Sezione PRO */}
+          <div className="mt-5 pt-4 border-t border-slate-800">
+            <p className="text-xs text-amber-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+              <Crown size={12} /> Per sbloccare la versione PRO:
+            </p>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">•</span>
+                <span>Acquista dalla sezione <strong className="text-white">"Benvenuto"</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">•</span>
+                <span>Dopo l'approvazione, riceverai un <strong className="text-emerald-400">link qui</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">•</span>
+                <span>Clicca il link → <strong className="text-white">Premium attivo automaticamente!</strong></span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Codice manuale */}
+          <div className="mt-4 pt-3 border-t border-slate-800/50">
+            <p className="text-[11px] text-slate-500 flex items-center gap-1">
+              <Bell size={10} className="text-yellow-500" />
+              Hai già un codice? Usa <code className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 font-mono text-[10px]">/activate CODICE</code> nel bot.
+            </p>
           </div>
         </div>
 
