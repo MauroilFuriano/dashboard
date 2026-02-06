@@ -1,0 +1,172 @@
+/**
+ * StripeCheckout.tsx - Componente per pagamento con Stripe Checkout
+ * 
+ * Flusso:
+ * 1. Genera activation_token univoco
+ * 2. Salva record su stripe_payments con status='pending'
+ * 3. Redirect a Stripe Checkout
+ * 4. Al ritorno, webhook Stripe aggiorna status='completed'
+ */
+
+import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { CreditCard, Loader2, ExternalLink } from 'lucide-react';
+import { supabase } from '../supabase';
+import toast from 'react-hot-toast';
+
+// Inizializza Stripe con la chiave pubblica
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+interface StripeCheckoutProps {
+    planName: string;
+    price: string;
+    onCancel?: () => void;
+}
+
+/**
+ * Genera un token di attivazione univoco
+ */
+const generateActivationToken = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 16; i++) {
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+};
+
+const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCancel }) => {
+    const [loading, setLoading] = useState(false);
+
+    const handleStripeCheckout = async () => {
+        setLoading(true);
+
+        try {
+            // 1. Ottieni l'utente corrente
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user || !user.email) {
+                toast.error('Devi essere loggato per procedere al pagamento');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Controlla se ha già un pagamento in corso o completato
+            const { data: existing } = await supabase
+                .from('stripe_payments')
+                .select('id, status')
+                .eq('user_email', user.email)
+                .in('status', ['pending', 'completed']);
+
+            if (existing && existing.length > 0) {
+                const status = existing[0].status;
+                setLoading(false);
+                if (status === 'completed') {
+                    toast.error('Hai già acquistato questo piano!', { icon: '✅' });
+                } else {
+                    toast.error('Hai già un pagamento in sospeso.', { icon: '⏳' });
+                }
+                return;
+            }
+
+            // 3. Genera token di attivazione
+            const activationToken = generateActivationToken();
+
+            // 4. Salva record preliminare su Supabase
+            const { error: insertError } = await supabase
+                .from('stripe_payments')
+                .insert([{
+                    user_email: user.email,
+                    plan_type: 'monthly',
+                    status: 'pending',
+                    activation_token: activationToken,
+                    amount: 5900, // €59 in centesimi
+                    currency: 'eur'
+                }]);
+
+            if (insertError) {
+                console.error('Errore insert:', insertError);
+                toast.error('Errore nella preparazione del pagamento');
+                setLoading(false);
+                return;
+            }
+
+            // 5. Redirect a Stripe Checkout
+            const stripe = await stripePromise;
+
+            if (!stripe) {
+                toast.error('Errore nel caricamento di Stripe');
+                setLoading(false);
+                return;
+            }
+
+            // Usa Stripe Checkout in modalità redirect
+            const { error: stripeError } = await stripe.redirectToCheckout({
+                lineItems: [{
+                    price: import.meta.env.VITE_STRIPE_PRICE_ID,
+                    quantity: 1,
+                }],
+                mode: 'payment', // o 'subscription' per abbonamenti ricorrenti
+                successUrl: `${window.location.origin}/analyzer?payment=success&token=${activationToken}`,
+                cancelUrl: `${window.location.origin}/?payment=cancelled`,
+                customerEmail: user.email,
+                clientReferenceId: activationToken, // Per il webhook
+            });
+
+            if (stripeError) {
+                console.error('Stripe error:', stripeError);
+                toast.error(stripeError.message || 'Errore Stripe');
+                setLoading(false);
+            }
+
+        } catch (error: any) {
+            console.error('Checkout error:', error);
+            toast.error('Errore durante il checkout: ' + error.message);
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            {/* Pulsante principale Stripe */}
+            <button
+                onClick={handleStripeCheckout}
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl text-base transition-all shadow-lg shadow-indigo-900/30 flex items-center justify-center gap-3 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {loading ? (
+                    <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Reindirizzamento a Stripe...
+                    </>
+                ) : (
+                    <>
+                        <CreditCard size={20} />
+                        Paga con Carta - {price}
+                        <ExternalLink size={16} className="opacity-60" />
+                    </>
+                )}
+            </button>
+
+            {/* Info sicurezza */}
+            <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                Pagamento sicuro gestito da Stripe
+            </div>
+
+            {/* Link annulla */}
+            {onCancel && (
+                <button
+                    onClick={onCancel}
+                    className="w-full py-2 text-slate-500 hover:text-white text-sm transition-colors"
+                >
+                    Annulla
+                </button>
+            )}
+        </div>
+    );
+};
+
+export default StripeCheckout;

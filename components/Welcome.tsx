@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { TrendingUp, Info, AlertTriangle, CheckCircle, Shield, Zap, Video } from 'lucide-react';
 import PaymentModal from './PaymentModal';
 import StrategyModal from './StrategyModal';
+import StripeCheckout from './StripeCheckout';
 
 // ✅ LAZY LOAD: Code-split componente pesante (Recharts)
 const AnalyzerReport = lazy(() => import('./AnalyzerReport'));
@@ -19,6 +20,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
   const VIDEO_BTC = "/presentazione_btc_trend.mp4"; // Il nuovo video che hai caricato
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
+  const [isStripeOpen, setIsStripeOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', type: 'SINGLE' });
 
   const handleSelect = (name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
@@ -37,6 +39,20 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
 
   return (
     <div className="animate-in fade-in duration-700 h-full pb-0 flex flex-col relative space-y-8">
+
+      {/* STRIPE MODAL */}
+      {isStripeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl p-6 relative">
+            <h3 className="text-xl font-bold text-white mb-4">Pagamento Sicuro</h3>
+            <StripeCheckout
+              planName="Crypto Analyzer Pro"
+              price="59€"
+              onCancel={() => setIsStripeOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       <PaymentModal
         isOpen={isPaymentOpen}
@@ -178,20 +194,29 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                 <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Setup Long & Short</div>
               </div>
 
-              <div className="mt-auto">
-                <div className="flex justify-between items-end mb-4 border-t border-slate-800 pt-4">
+              <div className="mt-auto space-y-3">
+                <div className="flex justify-between items-end border-t border-slate-800 pt-4">
                   <div className="text-xs text-slate-500 uppercase font-bold">Prezzo</div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">99€</span>
-                    <span className="text-xs text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">Lifetime</span>
+                    <span className="text-2xl font-bold text-white">59€</span>
+                    <span className="text-xs text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">Mensile</span>
                   </div>
                 </div>
-                <button onClick={() => handleSelect('Crypto Analyzer Pro', '99€', 'ANALYZER')} className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 hover:-translate-y-0.5 relative overflow-hidden group animate-pulse">
-                  {/* ✅ PULSE EFFECT BEST SELLER */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-transparent group-hover:from-emerald-400/30 transition-all"></span>
-                  <span className="relative z-10 flex items-center gap-2">
-                    Acquista Licenza <Zap size={18} className="animate-bounce" />
-                  </span>
+
+                {/* BOTTONE STRIPE */}
+                <button
+                  onClick={() => setIsStripeOpen(true)}
+                  className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                >
+                  💳 Paga con Carta (Automatico)
+                </button>
+
+                {/* BOTTONE CRYPTO */}
+                <button
+                  onClick={() => handleSelect('Crypto Analyzer Pro', '59€', 'ANALYZER')}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition-all border border-slate-700 hover:border-slate-600 flex items-center justify-center gap-2"
+                >
+                  <TrendingUp size={16} /> Paga con Crypto (Manuale)
                 </button>
               </div>
             </div>

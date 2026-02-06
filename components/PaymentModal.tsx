@@ -13,6 +13,15 @@ interface PaymentModalProps {
   onSuccess: () => void;
 }
 
+const generateActivationToken = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 16; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+};
+
 const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, price, onSuccess }) => {
 
   const wallets = {
@@ -82,7 +91,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
           user_email: user.email,
           piano: planName,
           txid: txid,
-          stato: 'pending'
+          stato: 'pending',
+          activation_token: generateActivationToken() // ✅ AUTO-GENERAZIONE TOKEN
         }]);
 
       if (error) throw error;
