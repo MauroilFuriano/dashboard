@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, CheckCircle, Loader2, User, Hash, HelpCircle } from 'lucide-react';
+import { X, Copy, CheckCircle, Loader2, User, Hash, HelpCircle, Zap } from 'lucide-react';
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
 import HelpTXIDModal from './HelpTXIDModal';
@@ -33,6 +33,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
   const [txid, setTxid] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // States for Success Flow
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState('');
 
   // Stato per aprire la guida
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -85,6 +89,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
       }
 
       // ✅ PROCEDI CON INSERT
+      const newToken = generateActivationToken();
+      setGeneratedToken(newToken); // Salva nello stato per mostrarlo dopo
+
       const { error } = await supabase
         .from('pagamenti')
         .insert([{
@@ -92,31 +99,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
           piano: planName,
           txid: txid,
           stato: 'pending',
-          activation_token: generateActivationToken() // ✅ AUTO-GENERAZIONE TOKEN
+          activation_token: newToken // Usa il token generato
         }]);
 
       if (error) throw error;
 
       // ✅ FEEDBACK VISIVO FORTE
       setLoading(false);
-      toast.success('🎉 Pagamento Registrato! Verifica in corso...', {
-        duration: 5000,
-        style: {
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          color: '#fff',
-          fontWeight: 'bold',
-          fontSize: '16px',
-          padding: '16px 24px',
-          boxShadow: '0 10px 40px rgba(16,185,129,0.3)'
-        },
-        icon: '✅'
-      });
 
-      // Attendi 1.5s per mostrare toast, poi chiudi
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1500);
+      // ✅ MOSTRA STATO SUCCESSO CON TRAKING
+      setIsSuccess(true);
+      // Token already set above
+      toast.success('Richiesta inviata con successo!', { icon: '🚀' });
 
     } catch (error: any) {
       console.error(error);
@@ -124,6 +118,73 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
       setLoading(false);
     }
   };
+
+  // RENDER SUCCESSO
+  if (isSuccess) {
+    const botLink = `https://t.me/cryptoanalyzer_AI_Bot?start=${generatedToken}`;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
+        <FocusLock returnFocus>
+          <div className="bg-slate-900 border border-emerald-500/50 rounded-2xl w-full max-w-md shadow-2xl p-8 text-center relative overflow-hidden">
+
+            {/* Background Glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mt-16"></div>
+
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20">
+                <CheckCircle size={32} className="text-emerald-500" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-white mb-2">Richiesta Ricevuta!</h3>
+              <p className="text-slate-400 mb-6">
+                Il tuo pagamento è in fase di verifica.<br />
+                Una volta approvato, usa questo link per attivare il Bot:
+              </p>
+
+              <div className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6">
+                <p className="text-xs text-slate-500 uppercase font-bold mb-2">Il tuo Codice Attivazione</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-slate-900 p-2 rounded text-emerald-400 font-mono text-lg tracking-wider border border-slate-800">
+                    {generatedToken}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedToken);
+                      toast.success('Copiato!');
+                    }}
+                    className="p-2 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <a
+                href={botLink}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-emerald-500/20"
+              >
+                <Zap size={20} className="fill-current" />
+                Attiva su Telegram
+              </a>
+
+              <button
+                onClick={() => {
+                  onSuccess();
+                  onClose();
+                }}
+                className="mt-4 text-slate-500 hover:text-white text-sm hover:underline"
+              >
+                Chiudi e torna alla Dashboard
+              </button>
+            </div>
+          </div>
+        </FocusLock>
+      </div>
+    );
+  }
 
   return (
     <>
