@@ -37,7 +37,7 @@ const AnalyzerBotPage: React.FC = () => {
         // Query diretta con filtro email - l'utente è autenticato quindi è sicuro
         const { data, error } = await supabase
           .from('pagamenti')
-          .select('id, stato, codice, activation_token, expires_at, user_email, piano')
+          .select('id, stato, codice, activation_token, user_email, piano')
           .eq('user_email', user.email)
           .order('id', { ascending: false })
           .limit(1);
