@@ -36,12 +36,10 @@ const AnalyzerBotPage: React.FC = () => {
         setUserEmail(user.email);
         const { data, error } = await supabase
           .from('pagamenti')
-          .select('stato, codice, activation_token, expires_at')
-          .eq('user_email', user.email)
-          // .ilike('piano', '%Analyzer%') // DEBUG: Filtro rimosso per test
+          .select('id, stato, codice, activation_token, expires_at, user_email, piano')
+          // .eq('user_email', user.email) // DEBUG: RIMOSSO FILTRO EMAIL
           .order('id', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .limit(5); // Debug: Prendi ultimi 5
 
         if (error) {
           setDebugError(error.message);
@@ -50,22 +48,23 @@ const AnalyzerBotPage: React.FC = () => {
           setDebugError(null);
         }
 
-        if (data) {
-          setStatus(data.stato);
-          setHasPaid(true);
+        if (data && data.length > 0) {
+          // Prendi il primo (il più recente) - DEBUG MODE
+          const latest = data[0]; // Questo prende l'ultimo pagamento assoluto
 
-          if (data.activation_token) {
-            setActivationToken(data.activation_token);
+          // Se la mail non matcha, avvisa
+          if (latest.user_email !== user.email) {
+            setDebugError(`Found ROW but email differs: DB='${latest.user_email}' vs YOUR='${user.email}'`);
+          } else {
+            setStatus(latest.stato);
+            setHasPaid(true);
+            if (latest.activation_token) setActivationToken(latest.activation_token);
           }
 
-          if (data.expires_at) {
-            setExpiresAt(data.expires_at);
-          }
+          if (data[0].codice && data[0].codice.length > 5) {
+            setLicenseKey(data[0].codice);
 
-          if (data.codice && data.codice.length > 5) {
-            setLicenseKey(data.codice);
-
-            const storageKey = `license_notified_${data.codice}`;
+            const storageKey = `license_notified_${data[0].codice}`;
             const alreadyNotified = localStorage.getItem(storageKey);
 
             if (!alreadyNotified) {
