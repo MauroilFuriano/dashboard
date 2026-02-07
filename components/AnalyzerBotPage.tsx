@@ -20,6 +20,8 @@ const AnalyzerBotPage: React.FC = () => {
   const [hasPaid, setHasPaid] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>(''); // Debug
+
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [pollInterval, setPollInterval] = useState(5000);
@@ -30,6 +32,7 @@ const AnalyzerBotPage: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
+        setUserEmail(user.email);
         const { data } = await supabase
           .from('pagamenti')
           .select('stato, codice, activation_token, expires_at')
