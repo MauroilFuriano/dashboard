@@ -121,8 +121,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
 
   // RENDER SUCCESSO
   if (isSuccess) {
-    const botLink = `https://t.me/cryptoanalyzer_AI_Bot?start=${generatedToken}`;
-
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
         <FocusLock returnFocus>
@@ -136,48 +134,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
                 <CheckCircle size={32} className="text-emerald-500" />
               </div>
 
-              <h3 className="text-2xl font-bold text-white mb-2">Richiesta Ricevuta!</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">Richiesta Inviata!</h3>
               <p className="text-slate-400 mb-6">
-                Il tuo pagamento è in fase di verifica.<br />
-                Una volta approvato, usa questo link per attivare il Bot:
+                Il tuo pagamento è stato registrato ed è in fase di <strong>verifica manuale</strong>.
+                <br /><br />
+                Non appena sarà approvato dall'amministratore, troverai il tuo <strong>Codice di Attivazione</strong> nella sezione:
+                <br />
+                <span className="text-emerald-400 font-bold">Crypto Analyzer Pro</span>
               </p>
-
-              <div className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6">
-                <p className="text-xs text-slate-500 uppercase font-bold mb-2">Il tuo Codice Attivazione</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-slate-900 p-2 rounded text-emerald-400 font-mono text-lg tracking-wider border border-slate-800">
-                    {generatedToken}
-                  </code>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedToken);
-                      toast.success('Copiato!');
-                    }}
-                    className="p-2 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors"
-                  >
-                    <Copy size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <a
-                href={botLink}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-emerald-500/20"
-              >
-                <Zap size={20} className="fill-current" />
-                Attiva su Telegram
-              </a>
 
               <button
                 onClick={() => {
                   onSuccess();
                   onClose();
                 }}
-                className="mt-4 text-slate-500 hover:text-white text-sm hover:underline"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-emerald-500/20"
               >
-                Chiudi e torna alla Dashboard
+                Ho Capito, Torna alla Dashboard
               </button>
             </div>
           </div>
