@@ -181,7 +181,9 @@ const AnalyzerBotPage: React.FC = () => {
     );
 
     // ✅ CASO 1: LICENZA ATTIVATA (status = activated)
-    if (status === 'activated' && expiresAt) {
+    const normalizedStatus = status?.toLowerCase();
+
+    if (normalizedStatus === 'activated' && expiresAt) {
       return (
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-between animate-in fade-in">
           <div className="flex items-center gap-3">
@@ -202,7 +204,7 @@ const AnalyzerBotPage: React.FC = () => {
     }
 
     // ✅ CASO 2: APPROVATO (status = approved) - Mostra link attivazione
-    if (status === 'approved' && activationToken) {
+    if (normalizedStatus === 'approved' && activationToken) {
       const activationLink = `https://t.me/${BOT_USERNAME}?start=PAY_${activationToken}`;
 
       return (
@@ -236,13 +238,13 @@ const AnalyzerBotPage: React.FC = () => {
     }
 
     // ✅ CASO 3: PENDING - In attesa di approvazione
-    if (status === 'pending') {
+    if (normalizedStatus === 'pending') {
       return (
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center py-2 animate-pulse">
           <div className="flex items-center gap-2">
             <Loader2 size={20} className="text-yellow-500 animate-spin" />
             <span className="text-yellow-500 font-mono text-sm font-bold">
-              VERIFICA PAGAMENTO IN CORSO...
+              VERIFICA PAGAMENTO IN CORSO ({status})
             </span>
           </div>
           <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
@@ -316,6 +318,11 @@ const AnalyzerBotPage: React.FC = () => {
             {/* Contenuto dinamico in base allo stato */}
             <div className="bg-slate-950 rounded-xl p-5 border border-slate-800 flex flex-col items-center justify-center gap-4 min-h-[100px] relative z-20">
               {renderLicenseContent()}
+
+              {/* DEBUG INFO: Rimuovere in produzione */}
+              {/* <div className="mt-4 text-[10px] text-slate-600 font-mono break-all">
+                DEBUG: State={status} | Token={activationToken ? 'Yes' : 'No'} | Paid={hasPaid ? 'Yes' : 'No'}
+              </div> */}
             </div>
 
             <div className="mt-8 flex gap-4 relative z-20">
