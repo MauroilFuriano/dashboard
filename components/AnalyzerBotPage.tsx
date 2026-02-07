@@ -37,9 +37,8 @@ const AnalyzerBotPage: React.FC = () => {
         const { data, error } = await supabase
           .from('pagamenti')
           .select('id, stato, codice, activation_token, expires_at, user_email, piano')
-          // .eq('user_email', user.email) // DEBUG: RIMOSSO FILTRO EMAIL
           .order('id', { ascending: false })
-          .limit(5); // Debug: Prendi ultimi 5
+          .limit(1);
 
         if (error) {
           setDebugError(error.message);
@@ -49,22 +48,22 @@ const AnalyzerBotPage: React.FC = () => {
         }
 
         if (data && data.length > 0) {
-          // Prendi il primo (il più recente) - DEBUG MODE
-          const latest = data[0]; // Questo prende l'ultimo pagamento assoluto
+          const latest = data[0];
+          setStatus(latest.stato);
+          setHasPaid(true);
 
-          // Se la mail non matcha, avvisa
-          if (latest.user_email !== user.email) {
-            setDebugError(`Found ROW but email differs: DB='${latest.user_email}' vs YOUR='${user.email}'`);
-          } else {
-            setStatus(latest.stato);
-            setHasPaid(true);
-            if (latest.activation_token) setActivationToken(latest.activation_token);
+          if (latest.activation_token) {
+            setActivationToken(latest.activation_token);
           }
 
-          if (data[0].codice && data[0].codice.length > 5) {
-            setLicenseKey(data[0].codice);
+          if (latest.expires_at) {
+            setExpiresAt(latest.expires_at);
+          }
 
-            const storageKey = `license_notified_${data[0].codice}`;
+          if (latest.codice && latest.codice.length > 5) {
+            setLicenseKey(latest.codice);
+
+            const storageKey = `license_notified_${latest.codice}`;
             const alreadyNotified = localStorage.getItem(storageKey);
 
             if (!alreadyNotified) {

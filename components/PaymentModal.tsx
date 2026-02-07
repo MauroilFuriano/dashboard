@@ -95,6 +95,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
       const { error } = await supabase
         .from('pagamenti')
         .insert([{
+          user_id: user.id, // ✅ Fix RLS: Usa UUID
           user_email: user.email,
           piano: planName,
           txid: txid,
