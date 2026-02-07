@@ -34,15 +34,12 @@ const AnalyzerBotPage: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setUserEmail(user.email);
-        const { data, error } = await supabase
-          .from('pagamenti')
-          .select('id, stato, codice, activation_token, expires_at, user_email, piano, user_id')
-          .order('id', { ascending: false })
-          .limit(1); // RLS is active: this returns THE user's latest payment
+        // Usa la funzione RPC sicura invece della query diretta
+        const { data, error } = await supabase.rpc('get_latest_payment');
 
         if (error) {
           setDebugError(error.message);
-          console.error("Supabase Error:", error);
+          console.error("Supabase RPC Error:", error);
         } else {
           setDebugError(null);
         }
