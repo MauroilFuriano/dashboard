@@ -34,12 +34,17 @@ const AnalyzerBotPage: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setUserEmail(user.email);
-        // Usa la funzione RPC sicura invece della query diretta
-        const { data, error } = await supabase.rpc('get_latest_payment');
+        // Query diretta con filtro email - l'utente è autenticato quindi è sicuro
+        const { data, error } = await supabase
+          .from('pagamenti')
+          .select('id, stato, codice, activation_token, expires_at, user_email, piano')
+          .eq('user_email', user.email)
+          .order('id', { ascending: false })
+          .limit(1);
 
         if (error) {
           setDebugError(error.message);
-          console.error("Supabase RPC Error:", error);
+          console.error("Supabase Error:", error);
         } else {
           setDebugError(null);
         }
