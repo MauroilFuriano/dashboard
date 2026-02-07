@@ -21,6 +21,7 @@ const AnalyzerBotPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [userEmail, setUserEmail] = useState<string>(''); // Debug
+  const [debugError, setDebugError] = useState<string | null>(null); // Debug Error
 
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -33,7 +34,7 @@ const AnalyzerBotPage: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setUserEmail(user.email);
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('pagamenti')
           .select('stato, codice, activation_token, expires_at')
           .eq('user_email', user.email)
@@ -41,6 +42,13 @@ const AnalyzerBotPage: React.FC = () => {
           .order('id', { ascending: false })
           .limit(1)
           .maybeSingle();
+
+        if (error) {
+          setDebugError(error.message);
+          console.error("Supabase Error:", error);
+        } else {
+          setDebugError(null);
+        }
 
         if (data) {
           setStatus(data.stato);
