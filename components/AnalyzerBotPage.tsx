@@ -34,30 +34,65 @@ const AnalyzerBotPage: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setUserEmail(user.email);
-        // Query diretta con filtro email - l'utente è autenticato quindi è sicuro
-        const { data, error } = await supabase
+
+        // Query 1: Tabella 'pagamenti' (TXID)
+        const { data: txidData, error: txidError } = await supabase
           .from('pagamenti')
-          .select('id, stato, codice, activation_token, user_email, piano')
+          .select('id, stato, codice, activation_token, user_email, piano, created_at')
           .eq('user_email', user.email)
           .order('id', { ascending: false })
           .limit(1);
 
-        if (error) {
-          setDebugError(error.message);
-          console.error("Supabase Error:", error);
+        // Query 2: Tabella 'stripe_payments' (Stripe)
+        const { data: stripeData, error: stripeError } = await supabase
+          .from('stripe_payments')
+          .select('id, status, activation_token, user_email, plan_type, created_at')
+          .eq('user_email', user.email)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (txidError) {
+          setDebugError(txidError.message);
+          console.error("Supabase Error (pagamenti):", txidError);
+        } else if (stripeError) {
+          setDebugError(stripeError.message);
+          console.error("Supabase Error (stripe_payments):", stripeError);
         } else {
           setDebugError(null);
         }
 
-        if (data && data.length > 0) {
-          const latest = data[0];
-          setStatus(latest.stato);
+        // Unisci risultati: prendi il più recente tra TXID e Stripe
+        let latest: any = null;
+        let source: 'txid' | 'stripe' | null = null;
+
+        if (txidData && txidData.length > 0) {
+          latest = txidData[0];
+          source = 'txid';
+        }
+
+        if (stripeData && stripeData.length > 0) {
+          const stripeRecord = stripeData[0];
+          // Se non c'è TXID o Stripe è più recente, usa Stripe
+          if (!latest || (stripeRecord.created_at && latest.created_at &&
+            new Date(stripeRecord.created_at) > new Date(latest.created_at))) {
+            latest = stripeRecord;
+            source = 'stripe';
+          }
+        }
+
+        if (latest) {
+          // Normalizza i campi (Stripe usa 'status', TXID usa 'stato')
+          const paymentStatus = source === 'stripe' ? latest.status : latest.stato;
+
+          // Mappa 'completed' (Stripe) a 'approved' per uniformità
+          const normalizedStatus = paymentStatus === 'completed' ? 'approved' : paymentStatus;
+
+          setStatus(normalizedStatus);
           setHasPaid(true);
 
           if (latest.activation_token) {
             setActivationToken(latest.activation_token);
           }
-
 
           if (latest.codice && latest.codice.length > 5) {
             setLicenseKey(latest.codice);
