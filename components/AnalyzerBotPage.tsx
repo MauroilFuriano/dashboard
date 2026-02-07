@@ -319,10 +319,9 @@ const AnalyzerBotPage: React.FC = () => {
             <div className="bg-slate-950 rounded-xl p-5 border border-slate-800 flex flex-col items-center justify-center gap-4 min-h-[100px] relative z-20">
               {renderLicenseContent()}
 
-              {/* DEBUG INFO: Rimuovere in produzione */}
-              {/* <div className="mt-4 text-[10px] text-slate-600 font-mono break-all">
-                DEBUG: State={status} | Token={activationToken ? 'Yes' : 'No'} | Paid={hasPaid ? 'Yes' : 'No'}
-              </div> */}
+              <div className="mt-4 text-[10px] text-slate-600 font-mono break-all bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+                DEBUG: State={status || 'NULL'} | Token={activationToken || 'NULL'} | Paid={hasPaid ? 'YES' : 'NO'} | User={licenseKey ? 'HIDDEN' : 'CHECKING...'}
+              </div>
             </div>
 
             <div className="mt-8 flex gap-4 relative z-20">
