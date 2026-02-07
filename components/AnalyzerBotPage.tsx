@@ -37,7 +37,7 @@ const AnalyzerBotPage: React.FC = () => {
           .from('pagamenti')
           .select('stato, codice, activation_token, expires_at')
           .eq('user_email', user.email)
-          .ilike('piano', '%Analyzer%')
+          // .ilike('piano', '%Analyzer%') // DEBUG: Filtro rimosso per test
           .order('id', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -323,7 +323,7 @@ const AnalyzerBotPage: React.FC = () => {
               {renderLicenseContent()}
 
               <div className="mt-4 text-[10px] text-slate-600 font-mono break-all bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
-                DEBUG: State={status || 'NULL'} | Token={activationToken || 'NULL'} | Paid={hasPaid ? 'YES' : 'NO'} | User={licenseKey ? 'HIDDEN' : 'CHECKING...'}
+                DEBUG: State={status || 'NULL'} | Token={activationToken || 'NULL'} | Paid={hasPaid ? 'YES' : 'NO'} | Email={userEmail || 'NO_EMAIL'}
               </div>
             </div>
 
