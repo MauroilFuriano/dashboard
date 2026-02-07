@@ -58,9 +58,6 @@ const AnalyzerBotPage: React.FC = () => {
             setActivationToken(latest.activation_token);
           }
 
-          if (latest.expires_at) {
-            setExpiresAt(latest.expires_at);
-          }
 
           if (latest.codice && latest.codice.length > 5) {
             setLicenseKey(latest.codice);
