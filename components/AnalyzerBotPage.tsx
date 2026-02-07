@@ -36,9 +36,9 @@ const AnalyzerBotPage: React.FC = () => {
         setUserEmail(user.email);
         const { data, error } = await supabase
           .from('pagamenti')
-          .select('id, stato, codice, activation_token, expires_at, user_email, piano')
+          .select('id, stato, codice, activation_token, expires_at, user_email, piano, user_id')
           .order('id', { ascending: false })
-          .limit(1);
+          .limit(1); // RLS is active: this returns THE user's latest payment
 
         if (error) {
           setDebugError(error.message);
@@ -73,11 +73,6 @@ const AnalyzerBotPage: React.FC = () => {
                 icon: '🔑'
               });
               localStorage.setItem(storageKey, 'true');
-            }
-
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
             }
           }
         } else {
