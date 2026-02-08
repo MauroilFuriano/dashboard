@@ -108,17 +108,30 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                 <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Gestione Rischio Dinamica</div>
               </div>
 
-              <div className="mt-auto">
-                <div className="flex justify-between items-end mb-4 border-t border-slate-800 pt-4">
-                  <div className="text-xs text-slate-500 uppercase font-bold">Prezzo</div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">500€</span>
-                    <span className="text-xs text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">Lifetime</span>
+              <div className="mt-auto space-y-3">
+                {/* Opzione Mensile */}
+                <div className="flex justify-between items-center border-t border-slate-800 pt-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-slate-500 uppercase font-bold">Mensile</span>
+                    <span className="text-xl font-bold text-white">29€<span className="text-xs text-slate-400 font-normal">/mese</span></span>
                   </div>
+                  <button onClick={() => handleSelect('BTC Trend Mensile', '29€', 'SINGLE')} className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5">
+                    Attiva
+                  </button>
                 </div>
-                <button onClick={() => handleSelect('BTC Single', '500€', 'SINGLE')} className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 hover:-translate-y-0.5">
-                  Attiva BTC Trend <TrendingUp size={18} />
-                </button>
+                {/* Opzione Annuale */}
+                <div className="flex justify-between items-center border-t border-slate-800/50 pt-3">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 uppercase font-bold">Annuale</span>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">RISPARMIA 15%</span>
+                    </div>
+                    <span className="text-xl font-bold text-white">299€<span className="text-xs text-slate-400 font-normal">/anno</span></span>
+                  </div>
+                  <button onClick={() => handleSelect('BTC Trend Annuale', '299€', 'SINGLE')} className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5">
+                    Attiva
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -183,7 +196,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                 <button onClick={() => openStrategy('ANALYZER')} className="text-slate-500 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"><Info size={18} /></button>
               </div>
 
-              <h3 className="font-bold text-white text-xl mb-1">Analyzer Pro AI</h3>
+              <h3 className="font-bold text-white text-xl mb-1">Crypto Analyzer Pro</h3>
               <p className="text-sm text-slate-400 mb-6">Analisi predittiva Futures su Telegram powered by Gemini 2.5.</p>
 
               {/* Lista caratteristiche allineata */}
@@ -203,20 +216,22 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                   </div>
                 </div>
 
-                {/* BOTTONE STRIPE */}
+                {/* BOTTONE STRIPE - Verde Neon */}
                 <button
                   onClick={() => setIsStripeOpen(true)}
-                  className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-emerald-400/40"
+                  style={{ textShadow: '0 0 10px rgba(16, 185, 129, 0.3)' }}
                 >
-                  💳 Paga con Carta (Automatico)
+                  💳 Paga con Carta
                 </button>
 
-                {/* BOTTONE CRYPTO */}
+                {/* BOTTONE CRYPTO - Verde Matrix Translucido */}
                 <button
                   onClick={() => handleSelect('Crypto Analyzer Pro', '59€', 'ANALYZER')}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition-all border border-slate-700 hover:border-slate-600 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-sm transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-2 backdrop-blur-sm"
+                  style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
                 >
-                  <TrendingUp size={16} /> Paga con Crypto (Manuale)
+                  <TrendingUp size={16} /> Paga con Crypto
                 </button>
               </div>
             </div>
