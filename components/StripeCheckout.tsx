@@ -89,8 +89,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
 
             // 5. Redirect al Stripe Payment Link
             // Il Payment Link gestisce tutto il checkout, noi abbiamo già salvato il record
-            // TODO: Rimettere link produzione €59 dopo test: https://buy.stripe.com/28E14p0FW64y1o3cHY5Ne00
-            const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E6oJdsIboS9Uz7nE5Ne01'; // TEST €1
+            const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E14p0FW64y1o3cHY5Ne00'; // Produzione €59
 
             // Aggiungi email come parametro per pre-compilare il checkout
             const checkoutUrl = `${STRIPE_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(user.email)}&client_reference_id=${activationToken}`;
