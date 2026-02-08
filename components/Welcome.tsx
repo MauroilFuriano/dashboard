@@ -17,11 +17,22 @@ interface WelcomeProps {
 const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn }) => {
   // VIDEO FILES
   const VIDEO_ANALYZER = "/presentazione.mp4";
-  const VIDEO_BTC = "/presentazione_btc_trend.mp4"; // Il nuovo video che hai caricato
+  const VIDEO_BTC = "/presentazione_btc_trend.mp4";
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isStripeOpen, setIsStripeOpen] = useState(false);
+  const [stripeProduct, setStripeProduct] = useState<{ name: string; price: string }>({ name: 'Crypto Analyzer Pro', price: '59€' });
   const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', type: 'SINGLE' });
+
+  // Funzione per aprire Stripe con prodotto specifico
+  const openStripe = (name: string, price: string) => {
+    if (!isLoggedIn) {
+      onAuthRequired();
+      return;
+    }
+    setStripeProduct({ name, price });
+    setIsStripeOpen(true);
+  };
 
   const handleSelect = (name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
     if (!isLoggedIn) {
@@ -46,8 +57,8 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl p-6 relative">
             <h3 className="text-xl font-bold text-white mb-4">Pagamento Sicuro</h3>
             <StripeCheckout
-              planName="Crypto Analyzer Pro"
-              price="59€"
+              planName={stripeProduct.name}
+              price={stripeProduct.price}
               onCancel={() => setIsStripeOpen(false)}
             />
           </div>
@@ -108,29 +119,58 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                 <div className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle size={14} className="text-emerald-500 shrink-0" /> Gestione Rischio Dinamica</div>
               </div>
 
-              <div className="mt-auto space-y-3">
-                {/* Opzione Mensile */}
-                <div className="flex justify-between items-center border-t border-slate-800 pt-4">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-500 uppercase font-bold">Mensile</span>
-                    <span className="text-xl font-bold text-white">29€<span className="text-xs text-slate-400 font-normal">/mese</span></span>
-                  </div>
-                  <button onClick={() => handleSelect('BTC Trend Mensile', '29€', 'SINGLE')} className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5">
-                    Attiva
-                  </button>
-                </div>
-                {/* Opzione Annuale */}
-                <div className="flex justify-between items-center border-t border-slate-800/50 pt-3">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 uppercase font-bold">Annuale</span>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">RISPARMIA 15%</span>
+              <div className="mt-auto space-y-4">
+                {/* PIANO MENSILE */}
+                <div className="border-t border-slate-800 pt-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-slate-500 uppercase font-bold">Mensile</span>
+                      <span className="text-xl font-bold text-white">29€<span className="text-xs text-slate-400 font-normal">/mese</span></span>
                     </div>
-                    <span className="text-xl font-bold text-white">299€<span className="text-xs text-slate-400 font-normal">/anno</span></span>
                   </div>
-                  <button onClick={() => handleSelect('BTC Trend Annuale', '299€', 'SINGLE')} className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5">
-                    Attiva
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSelect('BTC Trend Mensile', '29€', 'SINGLE')}
+                      className="flex-1 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-xs transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-1.5"
+                      style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
+                    >
+                      <TrendingUp size={14} /> Crypto
+                    </button>
+                    <button
+                      onClick={() => openStripe('BTC Trend Mensile', '29€')}
+                      className="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-900 font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+                    >
+                      💳 Carta
+                    </button>
+                  </div>
+                </div>
+
+                {/* PIANO ANNUALE */}
+                <div className="border-t border-slate-800/50 pt-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 uppercase font-bold">Annuale</span>
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">RISPARMIA 15%</span>
+                      </div>
+                      <span className="text-xl font-bold text-white">299€<span className="text-xs text-slate-400 font-normal">/anno</span></span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSelect('BTC Trend Annuale', '299€', 'SINGLE')}
+                      className="flex-1 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-xs transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-1.5"
+                      style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
+                    >
+                      <TrendingUp size={14} /> Crypto
+                    </button>
+                    <button
+                      onClick={() => openStripe('BTC Trend Annuale', '299€')}
+                      className="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-900 font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+                    >
+                      💳 Carta
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -218,7 +258,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
 
                 {/* BOTTONE STRIPE - Verde Neon */}
                 <button
-                  onClick={() => setIsStripeOpen(true)}
+                  onClick={() => openStripe('Crypto Analyzer Pro', '59€')}
                   className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-emerald-400/40"
                   style={{ textShadow: '0 0 10px rgba(16, 185, 129, 0.3)' }}
                 >
