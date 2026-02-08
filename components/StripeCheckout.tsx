@@ -1,21 +1,17 @@
 /**
- * StripeCheckout.tsx - Componente per pagamento con Stripe Checkout
+ * StripeCheckout.tsx - Componente per pagamento con Stripe Payment Links
  * 
  * Flusso:
  * 1. Genera activation_token univoco
  * 2. Salva record su stripe_payments con status='pending'
- * 3. Redirect a Stripe Checkout
- * 4. Al ritorno, webhook Stripe aggiorna status='completed'
+ * 3. Redirect a Stripe Payment Link
+ * 4. Al ritorno, admin approva manualmente su Supabase
  */
 
 import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { CreditCard, Loader2, ExternalLink } from 'lucide-react';
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
-
-// Inizializza Stripe con la chiave pubblica
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 interface StripeCheckoutProps {
     planName: string;
@@ -91,33 +87,15 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
                 return;
             }
 
-            // 5. Redirect a Stripe Checkout
-            const stripe = await stripePromise;
+            // 5. Redirect al Stripe Payment Link
+            // Il Payment Link gestisce tutto il checkout, noi abbiamo già salvato il record
+            const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E14p0FW64y1o3cHY5Ne00';
 
-            if (!stripe) {
-                toast.error('Errore nel caricamento di Stripe');
-                setLoading(false);
-                return;
-            }
+            // Aggiungi email come parametro per pre-compilare il checkout
+            const checkoutUrl = `${STRIPE_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(user.email)}&client_reference_id=${activationToken}`;
 
-            // Usa Stripe Checkout in modalità redirect
-            const { error: stripeError } = await stripe.redirectToCheckout({
-                lineItems: [{
-                    price: import.meta.env.VITE_STRIPE_PRICE_ID,
-                    quantity: 1,
-                }],
-                mode: 'payment', // o 'subscription' per abbonamenti ricorrenti
-                successUrl: `${window.location.origin}/analyzer?payment=success&token=${activationToken}`,
-                cancelUrl: `${window.location.origin}/?payment=cancelled`,
-                customerEmail: user.email,
-                clientReferenceId: activationToken, // Per il webhook
-            });
-
-            if (stripeError) {
-                console.error('Stripe error:', stripeError);
-                toast.error(stripeError.message || 'Errore Stripe');
-                setLoading(false);
-            }
+            // Redirect al checkout Stripe
+            window.location.href = checkoutUrl;
 
         } catch (error: any) {
             console.error('Checkout error:', error);
