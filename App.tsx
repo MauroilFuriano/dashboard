@@ -64,36 +64,55 @@ const App: React.FC = () => {
   }, []);
 
   // Funzione per controllare lo stato del pagamento su Supabase
+  // Controlla ENTRAMBE le tabelle: 'pagamenti' (TXID) e 'stripe_payments' (Stripe)
   const checkUserPayment = async (email: string | undefined) => {
     if (!email) return;
     setCheckingPayment(true);
     try {
-      const { data, error } = await supabase
+      const allPlans: string[] = [];
+
+      // 1. Controlla tabella 'pagamenti' (pagamenti TXID/manuali)
+      const { data: txidData, error: txidError } = await supabase
         .from('pagamenti')
         .select('piano, stato')
         .eq('user_email', email);
 
-      if (error) {
-        // ✅ NUOVO: Log solo in development
-        if (import.meta.env.DEV) {
-          console.error("Errore check pagamento:", error);
-        }
+      if (txidError && import.meta.env.DEV) {
+        console.error("Errore check pagamenti TXID:", txidError);
       }
-      if (data && data.length > 0) {
-        // Filtra solo i piani approvati O attivati
-        const approvedPlans = data
-          .filter(row => row.stato === 'approved' || row.stato === 'activated')
-          .map(row => row.piano)
-          .join(' ');
 
-        if (approvedPlans.length > 0) {
-          setActivePlan(approvedPlans);
-        } else {
-          setActivePlan(null);
-        }
+      if (txidData && txidData.length > 0) {
+        const approvedTxid = txidData
+          .filter(row => row.stato === 'approved' || row.stato === 'activated')
+          .map(row => row.piano);
+        allPlans.push(...approvedTxid);
       }
+
+      // 2. Controlla tabella 'stripe_payments' (pagamenti Stripe)
+      const { data: stripeData, error: stripeError } = await supabase
+        .from('stripe_payments')
+        .select('plan_type, status')
+        .eq('user_email', email);
+
+      if (stripeError && import.meta.env.DEV) {
+        console.error("Errore check stripe_payments:", stripeError);
+      }
+
+      if (stripeData && stripeData.length > 0) {
+        const approvedStripe = stripeData
+          .filter(row => row.status === 'completed' || row.status === 'activated')
+          .map(row => row.plan_type === 'monthly' ? 'Crypto Analyzer Pro' : row.plan_type);
+        allPlans.push(...approvedStripe);
+      }
+
+      // 3. Imposta il piano attivo se trovato
+      if (allPlans.length > 0) {
+        setActivePlan([...new Set(allPlans)].join(' ')); // Rimuove duplicati
+      } else {
+        setActivePlan(null);
+      }
+
     } catch (err) {
-      // ✅ NUOVO: Log solo in development
       if (import.meta.env.DEV) {
         console.error(err);
       }
