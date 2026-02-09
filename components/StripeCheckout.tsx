@@ -47,44 +47,49 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
                 return;
             }
 
-            // 2. Controlla se ha già un pagamento in corso o completato
-            const { data: existing } = await supabase
-                .from('stripe_payments')
-                .select('id, status')
-                .eq('user_email', user.email)
-                .in('status', ['pending', 'completed']);
+            // 2. Controlla se ha già un pagamento in corso o completato (SOLO per Crypto Analyzer Pro)
+            if (planName === 'Crypto Analyzer Pro') {
+                const { data: existing } = await supabase
+                    .from('stripe_payments')
+                    .select('id, status')
+                    .eq('user_email', user.email)
+                    .in('status', ['pending', 'completed']);
 
-            if (existing && existing.length > 0) {
-                const status = existing[0].status;
-                setLoading(false);
-                if (status === 'completed') {
-                    toast.error('Hai già acquistato questo piano!', { icon: '✅' });
-                } else {
-                    toast.error('Hai già un pagamento in sospeso.', { icon: '⏳' });
+                if (existing && existing.length > 0) {
+                    const status = existing[0].status;
+                    setLoading(false);
+                    if (status === 'completed') {
+                        toast.error('Hai già acquistato questo piano!', { icon: '✅' });
+                    } else {
+                        toast.error('Hai già un pagamento in sospeso.', { icon: '⏳' });
+                    }
+                    return;
                 }
-                return;
             }
 
             // 3. Genera token di attivazione
             const activationToken = generateActivationToken();
 
-            // 4. Salva record preliminare su Supabase
-            const { error: insertError } = await supabase
-                .from('stripe_payments')
-                .insert([{
-                    user_email: user.email,
-                    plan_type: 'monthly',
-                    status: 'pending',
-                    activation_token: activationToken,
-                    amount: 5900, // €59 in centesimi
-                    currency: 'eur'
-                }]);
+            // 4. Salva record preliminare su Supabase SOLO per Crypto Analyzer Pro
+            // I prodotti BTC usano btc-spot-webhook che salva in tabelle diverse
+            if (planName === 'Crypto Analyzer Pro') {
+                const { error: insertError } = await supabase
+                    .from('stripe_payments')
+                    .insert([{
+                        user_email: user.email,
+                        plan_type: 'monthly',
+                        status: 'pending',
+                        activation_token: activationToken,
+                        amount: 5900, // €59 in centesimi
+                        currency: 'eur'
+                    }]);
 
-            if (insertError) {
-                console.error('Errore insert:', insertError);
-                toast.error('Errore nella preparazione del pagamento');
-                setLoading(false);
-                return;
+                if (insertError) {
+                    console.error('Errore insert:', insertError);
+                    toast.error('Errore nella preparazione del pagamento');
+                    setLoading(false);
+                    return;
+                }
             }
 
             // 5. Redirect al Stripe Payment Link
