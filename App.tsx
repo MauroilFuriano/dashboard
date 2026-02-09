@@ -80,9 +80,9 @@ const App: React.FC = () => {
         }
       }
       if (data && data.length > 0) {
-        // Filtra solo i piani approvati
+        // Filtra solo i piani approvati O attivati
         const approvedPlans = data
-          .filter(row => row.stato === 'approved')
+          .filter(row => row.stato === 'approved' || row.stato === 'activated')
           .map(row => row.piano)
           .join(' ');
 
