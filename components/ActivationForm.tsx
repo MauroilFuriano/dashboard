@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, Eye, EyeOff, CheckCircle, Lock, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
-import CryptoJS from 'crypto-js';
 import DOMPurify from 'dompurify';
 
 const STORAGE_KEY = 'cryptobot_activation_form';
@@ -111,18 +110,8 @@ const ActivationForm: React.FC = () => {
     setStatus('loading');
 
     try {
-      // ✅ ENCRYPTION KEYS PRIMA DI SALVARE
-      const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
-
-      const encryptedSecretKey = CryptoJS.AES.encrypt(
-        formData.secretKey,
-        ENCRYPTION_KEY
-      ).toString();
-
-      const encryptedBotToken = CryptoJS.AES.encrypt(
-        formData.botToken,
-        ENCRYPTION_KEY
-      ).toString();
+      // ✅ I dati vengono inviati in chiaro via HTTPS (già sicuro)
+      // La criptazione avverrà lato server prima dello storage
 
       // ✅ UPDATE record esistente invece di INSERT
       const { error } = await supabase
@@ -130,8 +119,8 @@ const ActivationForm: React.FC = () => {
         .update({
           nome_cliente: formData.clientName || email.split('@')[0],
           access_key: formData.accessKey,
-          secret_key: encryptedSecretKey,
-          telegram_token: encryptedBotToken,
+          secret_key: formData.secretKey,
+          telegram_token: formData.botToken,
           chat_id: formData.chatId,
           status: 'pending_deploy'
         })
