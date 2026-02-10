@@ -4,31 +4,76 @@ import { supabase } from '../supabase';
 import CryptoJS from 'crypto-js';
 import DOMPurify from 'dompurify';
 
-const ActivationForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    clientName: '',
-    accessKey: '',
-    secretKey: '',
-    botToken: '',
-    chatId: ''
-  });
+const STORAGE_KEY = 'cryptobot_activation_form';
 
+const ActivationForm: React.FC = () => {
+  // Carica dati da localStorage se esistono
+  const getSavedData = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      // Ignora errori parsing
+    }
+    return {
+      clientName: '',
+      accessKey: '',
+      secretKey: '',
+      botToken: '',
+      chatId: ''
+    };
+  };
+
+  const [formData, setFormData] = useState(getSavedData);
   const [email, setEmail] = useState('');
+  const [requestId, setRequestId] = useState<number | null>(null);
   const [showSecret, setShowSecret] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [lastSubmit, setLastSubmit] = useState(0);
 
-  // Recuperiamo l'email dell'utente loggato all'avvio
+  // Recuperiamo l'email dell'utente loggato e il record esistente
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setEmail(user.email);
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user?.email) {
+        setEmail(user.email);
+
+        // Cerca record esistente in richieste_attivazione
+        const { data: existing } = await supabase
+          .from('richieste_attivazione')
+          .select('id, nome_cliente, access_key, chat_id')
+          .eq('user_email', user.email)
+          .eq('plan', 'BTC Single')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (existing) {
+          setRequestId(existing.id);
+          // Pre-popola i campi non sensibili se esistono
+          if (existing.nome_cliente || existing.access_key || existing.chat_id) {
+            setFormData((prev: typeof formData) => ({
+              ...prev,
+              clientName: existing.nome_cliente || prev.clientName,
+              accessKey: existing.access_key || prev.accessKey,
+              chatId: existing.chat_id || prev.chatId
+            }));
+          }
+        }
+      }
     });
   }, []);
 
+  // Salva in localStorage quando formData cambia
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+  }, [formData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ✅ SANITIZE INPUT per prevenire XSS
+    // âœ… SANITIZE INPUT per prevenire XSS
     const sanitizedValue = DOMPurify.sanitize(e.target.value);
 
     setFormData({
@@ -41,7 +86,7 @@ const ActivationForm: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
 
-    // ✅ RATE LIMITING (5 secondi cooldown)
+    // âœ… RATE LIMITING (5 secondi cooldown)
     const now = Date.now();
     if (now - lastSubmit < 5000) {
       setErrorMessage("Attendere 5 secondi prima di inviare nuovamente.");
@@ -57,11 +102,17 @@ const ActivationForm: React.FC = () => {
       return;
     }
 
+    if (!requestId) {
+      setErrorMessage("Nessun abbonamento attivo trovato. Completa prima il pagamento.");
+      setStatus('error');
+      return;
+    }
+
     setStatus('loading');
 
     try {
       // ✅ ENCRYPTION KEYS PRIMA DI SALVARE
-      const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY; // ✅ Da .env
+      const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
       const encryptedSecretKey = CryptoJS.AES.encrypt(
         formData.secretKey,
@@ -73,24 +124,39 @@ const ActivationForm: React.FC = () => {
         ENCRYPTION_KEY
       ).toString();
 
+      // ✅ UPDATE record esistente invece di INSERT
       const { error } = await supabase
         .from('richieste_attivazione')
-        .insert([
-          {
-            user_email: email,
-            nome_cliente: formData.clientName || email.split('@')[0],
-            access_key: formData.accessKey, // Public key - OK plain text
-            secret_key: encryptedSecretKey, // ✅ ENCRYPTED
-            telegram_token: encryptedBotToken, // ✅ ENCRYPTED
-            chat_id: formData.chatId
-          }
-        ]);
+        .update({
+          nome_cliente: formData.clientName || email.split('@')[0],
+          access_key: formData.accessKey,
+          secret_key: encryptedSecretKey,
+          telegram_token: encryptedBotToken,
+          chat_id: formData.chatId,
+          status: 'pending_deploy'
+        })
+        .eq('id', requestId);
 
       if (error) throw error;
+
+      // ✅ Pulisci localStorage dopo successo
+      localStorage.removeItem(STORAGE_KEY);
+
+      // ✅ Trigger deploy tramite Edge Function (evita CORS)
+      try {
+        await fetch('https://hlzjlsuirhulmjhbzmtd.supabase.co/functions/v1/trigger-deploy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request_id: requestId })
+        });
+      } catch (deployErr) {
+        // Ignora errori di rete - il bot verrà deployato manualmente se necessario
+        console.log('Deploy trigger attempted');
+      }
+
       setStatus('success');
 
     } catch (error: any) {
-      // ✅ NUOVO: Log solo in development
       if (import.meta.env.DEV) {
         console.error('Errore invio:', error);
       }
@@ -110,7 +176,7 @@ const ActivationForm: React.FC = () => {
           <h2 className="text-3xl font-bold text-white mb-2">Configurazione Completata!</h2>
           <p className="text-slate-400 max-w-md mx-auto">
             I tuoi dati sono stati crittografati e inviati al server sicuro.
-            Il bot inizierà l'inizializzazione entro <span className="text-white font-bold">60 minuti</span>.
+            Il bot inizierÃ  l'inizializzazione entro <span className="text-white font-bold">60 minuti</span>.
           </p>
         </div>
 
