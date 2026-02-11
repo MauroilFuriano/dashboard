@@ -35,19 +35,21 @@ const AnalyzerBotPage: React.FC = () => {
       if (user?.email) {
         setUserEmail(user.email);
 
-        // Query 1: Tabella 'pagamenti' (TXID)
+        // Query 1: Tabella 'pagamenti' (TXID) - SOLO Crypto Analyzer
         const { data: txidData, error: txidError } = await supabase
           .from('pagamenti')
           .select('id, stato, codice, activation_token, user_email, piano, created_at')
           .eq('user_email', user.email)
+          .ilike('piano', '%Crypto Analyzer%')  // <-- AGGIUNGI QUESTO
           .order('id', { ascending: false })
           .limit(1);
 
-        // Query 2: Tabella 'stripe_payments' (Stripe)
+        // Query 2: Tabella 'stripe_payments' (Stripe) - SOLO Crypto Analyzer
         const { data: stripeData, error: stripeError } = await supabase
           .from('stripe_payments')
           .select('id, status, activation_token, user_email, plan_type, created_at')
           .eq('user_email', user.email)
+          .or('piano.ilike.%Crypto Analyzer%,piano.ilike.%Analyzer Pro%')
           .order('created_at', { ascending: false })
           .limit(1);
 
