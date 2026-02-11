@@ -20,6 +20,7 @@ const ActivationForm: React.FC = () => {
       clientName: '',
       accessKey: '',
       secretKey: '',
+      apiPassphrase: '',
       botToken: '',
       chatId: ''
     };
@@ -95,7 +96,7 @@ const ActivationForm: React.FC = () => {
     setLastSubmit(now);
 
     // Validazione base
-    if (!formData.accessKey || !formData.secretKey || !formData.botToken || !formData.chatId) {
+    if (!formData.accessKey || !formData.secretKey || !formData.apiPassphrase || !formData.botToken || !formData.chatId) {
       setErrorMessage("Tutti i campi sono obbligatori per il funzionamento del bot.");
       setStatus('error');
       return;
@@ -120,6 +121,7 @@ const ActivationForm: React.FC = () => {
           nome_cliente: formData.clientName || email.split('@')[0],
           access_key: formData.accessKey,
           secret_key: formData.secretKey,
+          api_passphrase: formData.apiPassphrase,
           telegram_token: formData.botToken,
           chat_id: formData.chatId,
           status: 'pending_deploy'
