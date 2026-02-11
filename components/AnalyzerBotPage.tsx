@@ -72,9 +72,22 @@ const AnalyzerBotPage: React.FC = () => {
 
         if (stripeData && stripeData.length > 0) {
           const stripeRecord = stripeData[0];
-          // Se non c'è TXID o Stripe è più recente, usa Stripe
-          if (!latest || (stripeRecord.created_at && latest.created_at &&
-            new Date(stripeRecord.created_at) > new Date(latest.created_at))) {
+
+          // Verifica se i record hanno token validi
+          const txidHasToken = latest && (latest.activation_token || latest.codice);
+          const stripeHasToken = stripeRecord.activation_token;
+
+          // Usa Stripe se:
+          // 1. Non c'è nessun record TXID
+          // 2. OPPURE Stripe ha un token e TXID no (priorità al token)
+          // 3. OPPURE entrambi hanno token (o nessuno lo ha) e Stripe è più recente
+          const useStripe = !latest ||
+            (stripeHasToken && !txidHasToken) ||
+            ((!!stripeHasToken === !!txidHasToken) &&
+              stripeRecord.created_at && latest.created_at &&
+              new Date(stripeRecord.created_at) > new Date(latest.created_at));
+
+          if (useStripe) {
             latest = stripeRecord;
             source = 'stripe';
           }
