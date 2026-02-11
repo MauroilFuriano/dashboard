@@ -122,6 +122,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
 
   // RENDER SUCCESSO
   if (isSuccess) {
+    // Determina se è BTC Spot Bot o Crypto Analyzer
+    const isBTCBot = planName.toLowerCase().includes('btc');
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
         <FocusLock returnFocus>
@@ -136,13 +139,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
               </div>
 
               <h3 className="text-2xl font-bold text-white mb-2">Richiesta Inviata!</h3>
-              <p className="text-slate-400 mb-6">
-                Il tuo pagamento è stato registrato ed è in fase di <strong>verifica manuale</strong>.
-                <br /><br />
-                Non appena sarà approvato dall'amministratore, troverai il tuo <strong>Codice di Attivazione</strong> nella sezione:
-                <br />
-                <span className="text-emerald-400 font-bold">Crypto Analyzer Pro</span>
-              </p>
+
+              {isBTCBot ? (
+                // Messaggio per BTC Spot Bot
+                <p className="text-slate-400 mb-6">
+                  Il tuo pagamento è stato registrato ed è in fase di <strong>verifica manuale</strong>.
+                  <br /><br />
+                  Non appena sarà approvato, potrai procedere con la <strong>configurazione del bot</strong>:
+                  <br />
+                  <span className="text-orange-400 font-bold">Exchange Config</span> e <span className="text-orange-400 font-bold">Telegram Config</span>
+                  <br /><br />
+                  <span className="text-slate-500 text-sm">I form verranno sbloccati automaticamente dopo l'approvazione.</span>
+                </p>
+              ) : (
+                // Messaggio per Crypto Analyzer
+                <p className="text-slate-400 mb-6">
+                  Il tuo pagamento è stato registrato ed è in fase di <strong>verifica manuale</strong>.
+                  <br /><br />
+                  Non appena sarà approvato dall'amministratore, troverai il tuo <strong>Codice di Attivazione</strong> nella sezione:
+                  <br />
+                  <span className="text-emerald-400 font-bold">Crypto Analyzer Pro</span>
+                </p>
+              )}
 
               <button
                 onClick={() => {
