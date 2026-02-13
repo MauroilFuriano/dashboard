@@ -23,7 +23,19 @@ Deno.serve(async (req: Request) => {
         logs.push(line);
     };
 
-    log('=== STRIPE WEBHOOK v12 (Telegram Fix) ===');
+    log('=== STRIPE WEBHOOK v14 (DB Test) ===');
+
+    // Endpoint di debug GET
+    if (req.method === 'GET') {
+        log('DEBUG CHECK: Testing DB Connection...');
+        try {
+            const { data, error } = await supabase.from('webhook_debug_logs').insert([{ logs: 'DB CONNECTION TEST SUCCESSFUL' }]).select();
+            if (error) throw error;
+            return new Response(JSON.stringify({ status: 'ok', data }), { headers: { 'Content-Type': 'application/json' } });
+        } catch (err: any) {
+            return new Response(JSON.stringify({ status: 'error', message: err.message, logs }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        }
+    }
 
     if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
