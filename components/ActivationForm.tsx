@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Eye, EyeOff, CheckCircle, Lock, AlertCircle } from 'lucide-react';
+import { Zap, Eye, EyeOff, CheckCircle, Lock, AlertCircle, Globe } from 'lucide-react';
 import { supabase } from '../supabase';
 import DOMPurify from 'dompurify';
 
 const STORAGE_KEY = 'cryptobot_activation_form';
+
+const EXCHANGES = [
+  { id: 'Bitget', name: 'Bitget', requirePassphrase: true },
+  { id: 'Binance', name: 'Binance', requirePassphrase: false },
+  { id: 'Bybit', name: 'Bybit', requirePassphrase: false },
+  { id: 'MEXC', name: 'MEXC', requirePassphrase: false },
+];
 
 const ActivationForm: React.FC = () => {
   // Carica dati da localStorage se esistono
@@ -11,13 +18,19 @@ const ActivationForm: React.FC = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Ensure exchange has a default if loading from old data
+        return {
+          ...parsed,
+          exchange: parsed.exchange || 'Bitget'
+        };
       }
     } catch (e) {
       // Ignora errori parsing
     }
     return {
       clientName: '',
+      exchange: 'Bitget',
       accessKey: '',
       secretKey: '',
       apiPassphrase: '',
@@ -44,7 +57,7 @@ const ActivationForm: React.FC = () => {
         // Cerca record esistente in richieste_attivazione
         const { data: existing } = await supabase
           .from('richieste_attivazione')
-          .select('id, nome_cliente, access_key, chat_id')
+          .select('id, nome_cliente, access_key, chat_id, exchange')
           .eq('user_email', user.email)
           .eq('plan', 'BTC Single')
           .order('created_at', { ascending: false })
@@ -58,6 +71,7 @@ const ActivationForm: React.FC = () => {
             setFormData((prev: typeof formData) => ({
               ...prev,
               clientName: existing.nome_cliente || prev.clientName,
+              exchange: existing.exchange || prev.exchange,
               accessKey: existing.access_key || prev.accessKey,
               chatId: existing.chat_id || prev.chatId
             }));
@@ -72,8 +86,8 @@ const ActivationForm: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
   }, [formData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // âœ… SANITIZE INPUT per prevenire XSS
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    // ✅ SANITIZE INPUT per prevenire XSS
     const sanitizedValue = DOMPurify.sanitize(e.target.value);
 
     setFormData({
@@ -86,7 +100,7 @@ const ActivationForm: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
 
-    // âœ… RATE LIMITING (5 secondi cooldown)
+    // ✅ RATE LIMITING (5 secondi cooldown)
     const now = Date.now();
     if (now - lastSubmit < 5000) {
       setErrorMessage("Attendere 5 secondi prima di inviare nuovamente.");
@@ -95,9 +109,18 @@ const ActivationForm: React.FC = () => {
     }
     setLastSubmit(now);
 
+    const selectedExchange = EXCHANGES.find(ex => ex.id === formData.exchange);
+    const isPassphraseRequired = selectedExchange?.requirePassphrase;
+
     // Validazione base
-    if (!formData.accessKey || !formData.secretKey || !formData.apiPassphrase || !formData.botToken || !formData.chatId) {
-      setErrorMessage("Tutti i campi sono obbligatori per il funzionamento del bot.");
+    if (!formData.accessKey || !formData.secretKey || !formData.botToken || !formData.chatId) {
+      setErrorMessage("Tutti i campi obbligatori devono essere compilati.");
+      setStatus('error');
+      return;
+    }
+
+    if (isPassphraseRequired && !formData.apiPassphrase) {
+      setErrorMessage(`La Passphrase API è obbligatoria per ${formData.exchange}.`);
       setStatus('error');
       return;
     }
@@ -119,6 +142,7 @@ const ActivationForm: React.FC = () => {
         .from('richieste_attivazione')
         .update({
           nome_cliente: formData.clientName || email.split('@')[0],
+          exchange: formData.exchange,
           access_key: formData.accessKey,
           secret_key: formData.secretKey,
           api_passphrase: formData.apiPassphrase,
@@ -156,6 +180,8 @@ const ActivationForm: React.FC = () => {
     }
   };
 
+  const currentExchange = EXCHANGES.find(ex => ex.id === formData.exchange) || EXCHANGES[0];
+
   // Schermata di successo
   if (status === 'success') {
     return (
@@ -167,7 +193,7 @@ const ActivationForm: React.FC = () => {
           <h2 className="text-3xl font-bold text-white mb-2">Configurazione Completata!</h2>
           <p className="text-slate-400 max-w-md mx-auto">
             I tuoi dati sono stati crittografati e inviati al server sicuro.
-            Il bot inizierÃ  l'inizializzazione entro <span className="text-white font-bold">60 minuti</span>.
+            Il bot inizierà l'inizializzazione entro <span className="text-white font-bold">60 minuti</span>.
           </p>
         </div>
 
@@ -218,13 +244,31 @@ const ActivationForm: React.FC = () => {
 
         <div className="h-px bg-slate-800 my-4" />
 
-        {/* MEXC Keys */}
+        {/* Exchange Credential Section */}
         <div>
           <h3 className="text-white font-bold mb-4 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-            Credenziali Bitget
+            Credenziali Exchange
           </h3>
+
           <div className="grid grid-cols-1 gap-5">
+            {/* Exchange Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                <Globe size={14} /> Seleziona Exchange
+              </label>
+              <select
+                name="exchange"
+                value={formData.exchange}
+                onChange={handleChange}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all cursor-pointer appearance-none"
+              >
+                {EXCHANGES.map(ex => (
+                  <option key={ex.id} value={ex.id}>{ex.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-400">Access Key (Public)</label>
               <input
@@ -232,10 +276,11 @@ const ActivationForm: React.FC = () => {
                 name="accessKey"
                 value={formData.accessKey}
                 onChange={handleChange}
-                placeholder="mx0..."
+                placeholder={`API Key ${formData.exchange}...`}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm placeholder-slate-600"
               />
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-400">Secret Key (Private)</label>
               <div className="relative">
@@ -244,7 +289,7 @@ const ActivationForm: React.FC = () => {
                   name="secretKey"
                   value={formData.secretKey}
                   onChange={handleChange}
-                  placeholder="Incolla qui la chiave segreta..."
+                  placeholder="Chiave segreta..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all font-mono text-sm pr-10 placeholder-slate-600"
                 />
                 <button
@@ -255,6 +300,29 @@ const ActivationForm: React.FC = () => {
                 >
                   {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
+              </div>
+            </div>
+
+            {/* Passphrase - Only if required or optional but visible */}
+            <div className={`space-y-2 transition-all duration-300 ${!currentExchange.requirePassphrase ? 'opacity-80' : ''}`}>
+              <label className="text-sm font-medium text-slate-400 flex items-center justify-between">
+                <span>Passphrase API</span>
+                {!currentExchange.requirePassphrase && (
+                  <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Opzionale</span>
+                )}
+                {currentExchange.requirePassphrase && (
+                  <span className="text-[10px] text-brand-500 font-bold">* Obbligatorio su {currentExchange.name}</span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  name="apiPassphrase"
+                  value={formData.apiPassphrase}
+                  onChange={handleChange}
+                  placeholder={currentExchange.requirePassphrase ? "Passphrase obbligatoria" : "Lascia vuoto se non richiesta"}
+                  className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-all font-mono text-sm placeholder-slate-600 ${currentExchange.requirePassphrase ? 'border-slate-800 focus:border-brand-500' : 'border-slate-900 opacity-60 focus:opacity-100 focus:border-slate-700'}`}
+                />
               </div>
             </div>
           </div>
