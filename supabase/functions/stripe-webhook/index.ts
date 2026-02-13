@@ -23,7 +23,7 @@ Deno.serve(async (req: Request) => {
         logs.push(line);
     };
 
-    log('=== STRIPE WEBHOOK v14 (DB Test) ===');
+    log('=== STRIPE WEBHOOK v15 (Fix Telegram & Column) ===');
 
     // Endpoint di debug GET
     if (req.method === 'GET') {
@@ -147,6 +147,20 @@ async function updatePaymentStatus(email: string, paymentId: string, supabase: a
             .limit(1)
             .single();
 
+        // CHECK IDEMPOTENZA: Se esiste già un pagamento completato con lo stesso ID, ignoriamo
+        const { data: alreadyProcessed } = await supabase
+            .from('stripe_payments')
+            .select('id')
+            .eq('payment_id', paymentId)
+            .eq('status', 'completed')
+            .limit(1)
+            .single();
+
+        if (alreadyProcessed) {
+            log(`Payment ${paymentId} already processed (Idempotency Check). Skipping.`);
+            return true;
+        }
+
         if (searchError && searchError.code !== 'PGRST116') {
             log(`DB Search Error: ${searchError.message}`);
             return false;
@@ -192,5 +206,32 @@ async function updatePaymentStatus(email: string, paymentId: string, supabase: a
     } catch (e: any) {
         log(`UpdatePayment Exception: ${e.message}`);
         return false;
+    }
+}
+
+async function sendTelegram(text: string, log: any) {
+    if (!TELEGRAM_BOT_TOKEN || !ADMIN_CHAT_ID) {
+        log('WARNING: Telegram token or Chat ID missing. Notification skipped.');
+        return;
+    }
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: ADMIN_CHAT_ID,
+                text: text,
+                parse_mode: 'Markdown'
+            })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            log('Telegram notification sent successfully.');
+        } else {
+            log(`Telegram Error: ${JSON.stringify(data)}`);
+        }
+    } catch (e: any) {
+        log(`Telegram Send Exception: ${e.message}`);
     }
 }

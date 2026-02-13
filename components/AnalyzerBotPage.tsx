@@ -49,7 +49,7 @@ const AnalyzerBotPage: React.FC = () => {
           .from('stripe_payments')
           .select('id, status, activation_token, user_email, plan_type, created_at')
           .eq('user_email', user.email)
-          .or('piano.ilike.%Crypto Analyzer%,piano.ilike.%Analyzer Pro%')
+          .in('plan_type', ['monthly', 'lifetime', 'annual']) // FIX: Correct column and values
           .order('created_at', { ascending: false })
           .limit(1);
 
