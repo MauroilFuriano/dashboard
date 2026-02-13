@@ -74,16 +74,31 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
           <div className="flex space-x-4">
             <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700">4</div>
             <div>
-              <h4 className="text-lg font-medium text-white">Compila i Campi</h4>
-              <div className="text-slate-400 text-sm mt-1 space-y-1">
-                <p>• <strong>Note:</strong> Scrivi "Bot Spot" (o un nome a tua scelta)</p>
-                <p>• <strong>Passphrase:</strong> Inserisci una password personale (memorizzala!)</p>
+              <h4 className="text-lg font-medium text-white">Assegna un Nome</h4>
+              <p className="text-slate-400 text-sm mt-1">
+                Nel campo <strong>Note</strong>, scrivi un nome riconoscibile come "Bot Spot".
+              </p>
+            </div>
+          </div>
+
+          <div className="flex space-x-4">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center border border-brand-500 shadow-lg shadow-brand-500/20">5</div>
+            <div>
+              <h4 className="text-lg font-medium text-white">Imposta la Passphrase (IMPORTANTE)</h4>
+              <div className="text-slate-400 text-sm mt-1 space-y-2">
+                <p>
+                  Crea una <strong>password univoca</strong> per questa chiave API.
+                </p>
+                <div className="bg-emerald-900/30 border border-emerald-500/30 p-3 rounded-lg text-xs text-emerald-200 font-medium">
+                  ⚠️ <strong>Attenzione:</strong> Questa NON è la password del tuo account Bitget.<br />
+                  <span className="text-white underline decoration-wavy">SCRIVILA ORA SU CARTA.</span> Ti verrà richiesta nel prossimo passaggio per attivare il bot.
+                </div>
               </div>
             </div>
           </div>
 
           <div className="flex space-x-4">
-            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700">5</div>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700">6</div>
             <div>
               <h4 className="text-lg font-medium text-white">Seleziona Permessi</h4>
               <div className="text-slate-400 text-sm mt-1 space-y-1">
@@ -98,11 +113,11 @@ const ExchangeConfig: React.FC<ExchangeConfigProps> = ({ onNext }) => {
           </div>
 
           <div className="flex space-x-4">
-            <div className="shrink-0 w-8 h-8 rounded-full bg-brand-900 text-brand-400 font-bold flex items-center justify-center border border-brand-700">6</div>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-brand-900 text-brand-400 font-bold flex items-center justify-center border border-brand-700">7</div>
             <div>
               <h4 className="text-lg font-medium text-brand-400">Salva le Chiavi</h4>
               <p className="text-slate-400 text-sm mt-1">
-                Dopo la creazione, copia immediatamente <strong>Access Key</strong>, <strong>Secret Key</strong> e <strong>Passphrase</strong>.
+                Dopo la creazione, copia immediatamente <strong>Access Key</strong>, <strong>Secret Key</strong> e la tua <strong>Passphrase</strong>.
                 La Secret Key verrà mostrata una sola volta!
               </p>
             </div>
