@@ -10,6 +10,7 @@ interface PaymentModalProps {
   onClose: () => void;
   planName: string;
   price: string;
+  priceUSDC: string;
   onSuccess: () => void;
 }
 
@@ -22,11 +23,11 @@ const generateActivationToken = (): string => {
   return token;
 };
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, price, onSuccess }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, price, priceUSDC, onSuccess }) => {
 
   const wallets = {
-    BSC: "0x32144cd83aa0164e10b855c6198dd819db42b816",
-    SOL: "8QejkQynGzxQYpdcPKmzVv3MZ2kXew2hZEisRyHma2Xm"
+    BSC: "0xa18350d19add11944a41d8c876264bea3136bb2e",
+    SOL: "JDM66jruwSTC2oDZt3LD2E8xcWN44W1NWMABeVUQjFaF"
   };
 
   const [network, setNetwork] = useState<'BSC' | 'SOL'>('BSC');
@@ -200,41 +201,69 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, 
 
             <div className="p-6 space-y-6 overflow-y-auto overscroll-contain">
 
+              {/* HEADER USDC - NUOVO DESIGN */}
+              <div className="text-center bg-slate-950/50 rounded-2xl p-6 border border-slate-800">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/20">
+                  <span className="text-xl">💎</span>
+                </div>
+                <h4 className="text-slate-400 font-medium text-sm uppercase tracking-wide">Totale da Inviare</h4>
+                <div className="text-4xl font-bold text-white my-2 tracking-tight">
+                  {priceUSDC} <span className="text-blue-400">USDC</span>
+                </div>
+                <p className="text-slate-500 text-sm font-mono">
+                  ≈ {price}
+                </p>
+
+                <div className="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-200 text-left flex gap-2">
+                  <Zap className="shrink-0 text-amber-400" size={16} />
+                  <span>
+                    <strong>Importante:</strong> Il prezzo è calcolato in USDC. Invia l'importo esatto in <strong>USDC</strong> (non Euro).
+                    Se il tuo wallet è in Euro, convertili prima.
+                  </span>
+                </div>
+              </div>
+
               {/* Selezione Rete */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setNetwork('BSC')}
-                  className={`p-3 rounded-xl border text-center transition-all ${network === 'BSC' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
-                    }`}
-                >
-                  <div className="font-bold">Rete BSC (BEP20)</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNetwork('SOL')}
-                  className={`p-3 rounded-xl border text-center transition-all ${network === 'SOL' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
-                    }`}
-                >
-                  <div className="font-bold">Rete SOLANA</div>
-                </button>
+              <div>
+                <label className="text-slate-400 text-xs font-bold uppercase mb-3 block ml-1">1. Seleziona Rete (Network)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNetwork('BSC')}
+                    className={`p-3 rounded-xl border text-center transition-all ${network === 'BSC' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                  >
+                    <div className="font-bold">Rete BSC (BEP20)</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNetwork('SOL')}
+                    className={`p-3 rounded-xl border text-center transition-all ${network === 'SOL' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                  >
+                    <div className="font-bold">Rete SOLANA</div>
+                  </button>
+                </div>
               </div>
 
               {/* Indirizzo e QR */}
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center">
-                <div className="bg-white p-2 rounded-lg mb-4">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-32 h-32" />
-                </div>
+              <div>
+                <label className="text-slate-400 text-xs font-bold uppercase mb-3 block ml-1">2. Invia Pagamento</label>
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center">
+                  <div className="bg-white p-2 rounded-lg mb-4">
+                    <img src={qrCodeUrl} alt="QR Code" className="w-32 h-32" />
+                  </div>
 
-                <p className="text-slate-400 text-sm mb-2">Invia esattamente <strong className="text-white">{price} USDT/USDC</strong> a:</p>
+                  <p className="text-slate-400 text-sm mb-2">Invia esattamente <strong className="text-white">{priceUSDC} USDC</strong> a:</p>
 
-                <div className="w-full flex items-center gap-2 max-w-md">
-                  <code className="flex-1 bg-slate-900 border border-slate-800 p-3 rounded-lg text-slate-200 font-mono text-xs break-all text-left">
-                    {activeAddress}
-                  </code>
-                  <button onClick={handleCopy} aria-label={copied ? "Indirizzo copiato" : "Copia indirizzo wallet"} className="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-lg transition-colors">
-                    {copied ? <CheckCircle size={18} className="text-emerald-500" /> : <Copy size={18} />}
-                  </button>
+                  <div className="w-full flex items-center gap-2 max-w-md">
+                    <code className="flex-1 bg-slate-900 border border-slate-800 p-3 rounded-lg text-slate-200 font-mono text-xs break-all text-left">
+                      {activeAddress}
+                    </code>
+                    <button onClick={handleCopy} aria-label={copied ? "Indirizzo copiato" : "Copia indirizzo wallet"} className="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-lg transition-colors">
+                      {copied ? <CheckCircle size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

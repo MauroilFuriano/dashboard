@@ -22,7 +22,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isStripeOpen, setIsStripeOpen] = useState(false);
   const [stripeProduct, setStripeProduct] = useState<{ name: string; price: string }>({ name: 'Crypto Analyzer Pro', price: '59€' });
-  const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', type: 'SINGLE' });
+  const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, priceUSDC: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', priceUSDC: '', type: 'SINGLE' });
 
   // Funzione per aprire Stripe con prodotto specifico
   const openStripe = (name: string, price: string) => {
@@ -34,12 +34,12 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
     setIsStripeOpen(true);
   };
 
-  const handleSelect = (name: string, price: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
+  const handleSelect = (name: string, price: string, priceUSDC: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER') => {
     if (!isLoggedIn) {
       onAuthRequired();
       return;
     }
-    setSelectedProduct({ name, price, type });
+    setSelectedProduct({ name, price, priceUSDC, type });
     setIsPaymentOpen(true);
   };
 
@@ -70,6 +70,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
         onClose={() => setIsPaymentOpen(false)}
         planName={selectedProduct.name}
         price={selectedProduct.price}
+        priceUSDC={selectedProduct.priceUSDC}
         onSuccess={() => onNext(selectedProduct.type)}
       />
       <StrategyModal
@@ -130,7 +131,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleSelect('BTC Trend Mensile', '29€', 'SINGLE')}
+                      onClick={() => handleSelect('BTC Trend Mensile', '29€', '35', 'SINGLE')}
                       className="flex-1 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-xs transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-1.5"
                       style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
                     >
@@ -158,7 +159,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleSelect('BTC Trend Annuale', '299€', 'SINGLE')}
+                      onClick={() => handleSelect('BTC Trend Annuale', '299€', '355', 'SINGLE')}
                       className="flex-1 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-xs transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-1.5"
                       style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
                     >
@@ -267,7 +268,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
 
                 {/* BOTTONE CRYPTO - Verde Matrix Translucido */}
                 <button
-                  onClick={() => handleSelect('Crypto Analyzer Pro', '59€', 'ANALYZER')}
+                  onClick={() => handleSelect('Crypto Analyzer Pro', '59€', '70', 'ANALYZER')}
                   className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-sm transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-2 backdrop-blur-sm"
                   style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
                 >
