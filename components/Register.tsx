@@ -28,6 +28,8 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Stato per mostrare la schermata di conferma email dopo registrazione
+  const [emailSent, setEmailSent] = useState(false);
 
   // Password validation
   const passwordValidation = validatePassword(password);
@@ -71,8 +73,9 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
       if (rememberMe) {
         localStorage.setItem('cryptobot_email', email);
       }
-      // Login automatico gestito da App.tsx via onAuthStateChange
+      // Mostra schermata di conferma email
       setLoading(false);
+      setEmailSent(true);
     }
   };
 
@@ -92,6 +95,55 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
     if (passwordValidation.strength === 4) return 'Buona';
     return 'Forte';
   };
+
+  // ========================================
+  // SCHERMATA CONFERMA EMAIL POST-REGISTRAZIONE
+  // Mostrata dopo signUp riuscito per invitare l'utente a verificare la propria email
+  // ========================================
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in">
+        <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-8 relative overflow-hidden text-center">
+          {/* Decorative bg */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -mt-16"></div>
+
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Icona Email con animazione pulse */}
+            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20 animate-pulse">
+              <Mail className="text-emerald-400 w-8 h-8" />
+            </div>
+
+            <h1 className="text-2xl font-bold text-white mb-3">Controlla la tua Email!</h1>
+
+            <p className="text-slate-400 text-sm leading-relaxed mb-2">
+              Ti abbiamo inviato un link di conferma a:
+            </p>
+            <p className="text-white font-semibold text-base mb-4 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+              {email}
+            </p>
+            <p className="text-slate-400 text-sm leading-relaxed mb-6">
+              Clicca sul link nell'email per attivare il tuo account e accedere alla dashboard.
+            </p>
+
+            {/* Nota Spam */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-200 mb-6 w-full flex items-start gap-2">
+              <AlertCircle className="shrink-0 text-amber-400 mt-0.5" size={14} />
+              <span>Non trovi l'email? Controlla la cartella <strong>Spam</strong> o <strong>Posta indesiderata</strong>.</span>
+            </div>
+
+            {/* Pulsante Torna al Login */}
+            <button
+              onClick={onSwitchToLogin}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-brand-950 bg-white hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-slate-900 transition-all transform hover:-translate-y-0.5 gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Torna al Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in">
@@ -175,8 +227,8 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 </div>
                 <p className="text-xs text-slate-400">
                   Sicurezza: <span className={`font-medium ${passwordValidation.strength >= 4 ? 'text-emerald-400' :
-                      passwordValidation.strength === 3 ? 'text-blue-400' :
-                        'text-yellow-400'
+                    passwordValidation.strength === 3 ? 'text-blue-400' :
+                      'text-yellow-400'
                     }`}>
                     {getStrengthText()}
                   </span>
