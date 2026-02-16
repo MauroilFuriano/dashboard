@@ -391,7 +391,7 @@ const AnalyzerBotPage: React.FC = () => {
           </div>
 
           {/* FEATURES */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
               <div className="w-10 h-10 mx-auto bg-purple-500/10 rounded-lg flex items-center justify-center text-purple-400 mb-3"><Terminal size={20} /></div>
               <p className="text-xs text-slate-500 uppercase font-bold">AI Engine</p><p className="text-white font-bold">Gemini 2.5</p>
