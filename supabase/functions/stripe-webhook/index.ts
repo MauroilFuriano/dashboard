@@ -35,6 +35,15 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABA
 // HANDLER PRINCIPALE
 // =============================================================================
 
+// Product IDs validi per Crypto Analyzer (ignorare BTC Spot e altri)
+const ALLOWED_PRODUCT_IDS = [
+    'prod_TuoDbBPoQ0Lrvn', // Crypto Analyzer Pro - Standard
+    'prod_TuoBNeViu26GBm', // Crypto Analyzer Pro - Early Bird
+    'prod_TwNAWdsxQTRD4a', // Test Crypto Analyzer
+    'prod_TwhMvbUdxnOGre', // [TEST] Verifica Flusso - 1€ (usato per debug)
+    'prod_TwhMvbUdxnOGre' // Safe duplicate
+];
+
 Deno.serve(async (req: Request) => {
     const logs: string[] = [];
     const log = (msg: string) => {
@@ -43,7 +52,7 @@ Deno.serve(async (req: Request) => {
         logs.push(line);
     };
 
-    log('=== STRIPE WEBHOOK v16 (Scadenze + Notifiche) ===');
+    log('=== STRIPE WEBHOOK v17 (Product Filter) ===');
 
     // Endpoint di debug GET
     if (req.method === 'GET') {
@@ -86,6 +95,20 @@ Deno.serve(async (req: Request) => {
         // =====================================================================
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object as Stripe.Checkout.Session;
+
+            // CHECK PRODOTTO
+            try {
+                const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+                const productId = lineItems.data[0]?.price?.product as string;
+
+                if (productId && !ALLOWED_PRODUCT_IDS.includes(productId)) {
+                    log(`Ignored product: ${productId} (Not Crypto Analyzer)`);
+                    return jsonResponse({ received: true, status: 'ignored_product' });
+                }
+            } catch (e) {
+                log(`Error checking product ID: ${e.message}`);
+            }
+
             const customerEmail = await resolveEmail(session, log);
             const paymentId = session.id;
             const amountTotal = session.amount_total;
@@ -117,6 +140,13 @@ Deno.serve(async (req: Request) => {
         // =====================================================================
         else if (event.type === 'invoice.paid') {
             const invoice = event.data.object as Stripe.Invoice;
+
+            // CHECK PRODOTTO RINNOVO
+            const productId = invoice.lines?.data[0]?.price?.product as string;
+            if (productId && !ALLOWED_PRODUCT_IDS.includes(productId)) {
+                log(`Ignored renewal product: ${productId} (Not Crypto Analyzer)`);
+                return jsonResponse({ received: true, status: 'ignored_product_renewal' });
+            }
 
             // Ignora prima fattura (già gestita da checkout.session.completed)
             if (invoice.billing_reason === 'subscription_create') {
