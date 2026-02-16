@@ -45,11 +45,12 @@ const AnalyzerBotPage: React.FC = () => {
           .limit(1);
 
         // Query 2: Tabella 'stripe_payments' (Stripe) - SOLO Crypto Analyzer
+        // Query 2: include expires_at per mostrare scadenza abbonamento
         const { data: stripeData, error: stripeError } = await supabase
           .from('stripe_payments')
-          .select('id, status, activation_token, user_email, plan_type, created_at')
+          .select('id, status, activation_token, user_email, plan_type, created_at, expires_at')
           .eq('user_email', user.email)
-          .in('plan_type', ['monthly', 'lifetime', 'annual']) // FIX: Correct column and values
+          .in('plan_type', ['monthly', 'lifetime', 'annual'])
           .order('created_at', { ascending: false })
           .limit(1);
 
@@ -107,6 +108,11 @@ const AnalyzerBotPage: React.FC = () => {
 
           if (latest.activation_token) {
             setActivationToken(latest.activation_token);
+          }
+
+          // Popola la data di scadenza dall'abbonamento Stripe
+          if (latest.expires_at) {
+            setExpiresAt(latest.expires_at);
           }
 
           if (latest.codice && latest.codice.length > 5) {
@@ -290,7 +296,35 @@ const AnalyzerBotPage: React.FC = () => {
       );
     }
 
-    // ✅ CASO 3: PENDING - In attesa di approvazione
+    // ✅ CASO 3: ABBONAMENTO SCADUTO → Ritorno FREEMIUM con CTA rinnovo
+    if (normalizedStatus === 'expired') {
+      return (
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-between animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
+              <Bell className="text-amber-400" size={24} />
+            </div>
+            <div>
+              <span className="text-[11px] text-amber-400 font-bold uppercase tracking-wider">Abbonamento Scaduto</span>
+              <p className="text-white font-bold text-lg">🆓 FREEMIUM</p>
+              <p className="text-[11px] text-slate-500">Il tuo abbonamento PRO è scaduto. Rinnova per riattivare tutte le funzionalità.</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              toast('Vai alla sezione "Benvenuto" per rinnovare PRO!', { icon: '🔄' });
+            }}
+            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-1"
+          >
+            <Crown size={18} />
+            Riattiva PRO
+          </button>
+        </div>
+      );
+    }
+
+    // ✅ CASO 4: PENDING - In attesa di approvazione
     if (normalizedStatus === 'pending') {
       return (
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center py-2 animate-pulse">
@@ -372,9 +406,12 @@ const AnalyzerBotPage: React.FC = () => {
             <div className="bg-slate-950 rounded-xl p-5 border border-slate-800 flex flex-col items-center justify-center gap-4 min-h-[100px] relative z-20">
               {renderLicenseContent()}
 
-              <div className="mt-4 text-[10px] text-slate-600 font-mono break-all bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
-                DEBUG: State={status || 'NULL'} | Token={activationToken || 'NULL'} | Paid={hasPaid ? 'YES' : 'NO'} | Email={userEmail || 'NO_EMAIL'}
-              </div>
+              {/* Barra DEBUG visibile solo in development */}
+              {import.meta.env.DEV && (
+                <div className="mt-4 text-[10px] text-slate-600 font-mono break-all bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+                  DEBUG: State={status || 'NULL'} | Token={activationToken || 'NULL'} | Paid={hasPaid ? 'YES' : 'NO'} | Email={userEmail || 'NO_EMAIL'}
+                </div>
+              )}
             </div>
 
             <div className="mt-8 flex gap-4 relative z-20">
