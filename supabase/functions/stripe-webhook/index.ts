@@ -40,8 +40,7 @@ const ALLOWED_PRODUCT_IDS = [
     'prod_TuoDbBPoQ0Lrvn', // Crypto Analyzer Pro - Standard
     'prod_TuoBNeViu26GBm', // Crypto Analyzer Pro - Early Bird
     'prod_TwNAWdsxQTRD4a', // Test Crypto Analyzer
-    'prod_TwhMvbUdxnOGre', // [TEST] Verifica Flusso - 1€ (usato per debug)
-    'prod_TwhMvbUdxnOGre' // Safe duplicate
+    // RIMOSSO prod_TwhMvbUdxnOGre (usato per test BTC Spot, non Crypto Analyzer)
 ];
 
 Deno.serve(async (req: Request) => {
