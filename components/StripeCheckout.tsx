@@ -92,11 +92,11 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
                 }
             }
 
-            // [TEST MODE] Link di pagamento da 1€ per tutti i prodotti
+            // Payment Links Stripe (PRODUZIONE)
             const PAYMENT_LINKS: { [key: string]: string } = {
-                'Crypto Analyzer Pro': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a', // TEST 1€
-                'BTC Trend Mensile': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a',   // TEST 1€
-                'BTC Trend Annuale': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a',   // TEST 1€
+                'Crypto Analyzer Pro': 'https://buy.stripe.com/bJedRbdsI50ud6LcHY5Ne09', // Mensile 59€
+                'BTC Trend Mensile': 'https://buy.stripe.com/fZu4gB1K0akOaYD8rI5Ne07',   // Mensile 29€
+                'BTC Trend Annuale': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a',   // [TEST] 1€ per prove
             };
 
             const STRIPE_PAYMENT_LINK = PAYMENT_LINKS[planName] || PAYMENT_LINKS['Crypto Analyzer Pro'];
