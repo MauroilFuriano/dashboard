@@ -94,13 +94,13 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
 
             // 5. Redirect al Stripe Payment Link
             // Mappa dei Payment Links per ogni prodotto
+            // [TEST MODE] Link di pagamento da 1€ per tutti i prodotti
             const PAYMENT_LINKS: { [key: string]: string } = {
-                'Crypto Analyzer Pro': 'https://buy.stripe.com/bJedRbdsI50ud6LcHY5Ne09', // €59/mese
-                'BTC Trend Mensile': 'https://buy.stripe.com/fZu4gB1K0akOaYD8rI5Ne07',   // €29/mese
-                'BTC Trend Annuale': 'https://buy.stripe.com/dRm5kF3S8csW6InazQ5Ne08',   // €299/anno
+                'Crypto Analyzer Pro': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a', // TEST 1€
+                'BTC Trend Mensile': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a',   // TEST 1€
+                'BTC Trend Annuale': 'https://buy.stripe.com/eVqfZjdsI1Oi0jZ4bs5Ne0a',   // TEST 1€
             };
 
-            // Seleziona il link corretto in base al piano
             const STRIPE_PAYMENT_LINK = PAYMENT_LINKS[planName] || PAYMENT_LINKS['Crypto Analyzer Pro'];
 
             // Aggiungi email come parametro per pre-compilare il checkout
