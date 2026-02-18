@@ -54,7 +54,7 @@ const ActivationForm: React.FC = () => {
       if (user?.email) {
         setEmail(user.email);
 
-        // Cerca record esistente in richieste_attivazione
+        // 1. Cerca record esistente in richieste_attivazione
         const { data: existing } = await supabase
           .from('richieste_attivazione')
           .select('id, nome_cliente, access_key, chat_id, exchange')
@@ -75,6 +75,39 @@ const ActivationForm: React.FC = () => {
               accessKey: existing.access_key || prev.accessKey,
               chatId: existing.chat_id || prev.chatId
             }));
+          }
+        } else {
+          // 2. Se non esiste in richieste_attivazione, cerca pagamento approvato in 'pagamenti'
+          // e crea automaticamente il record in richieste_attivazione
+          const { data: approvedPayment } = await supabase
+            .from('pagamenti')
+            .select('id, user_email, piano, stato')
+            .eq('user_email', user.email)
+            .like('piano', '%BTC%')
+            .eq('stato', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (approvedPayment) {
+            // Determina il tipo di piano
+            const planType = approvedPayment.piano.toLowerCase().includes('annuale') ? 'annual' : 'monthly';
+
+            // Crea record in richieste_attivazione
+            const { data: newRequest, error: insertError } = await supabase
+              .from('richieste_attivazione')
+              .insert([{
+                user_email: user.email,
+                plan: 'BTC Single',
+                plan_type: planType,
+                status: 'pending_config'
+              }])
+              .select('id')
+              .single();
+
+            if (!insertError && newRequest) {
+              setRequestId(newRequest.id);
+            }
           }
         }
       }
