@@ -1,6 +1,6 @@
 /**
  * StripeCheckout.tsx - Componente per pagamento con Stripe Payment Links
- * 
+ *
  * Flusso:
  * 1. Genera activation_token univoco
  * 2. Salva record su stripe_payments con status='pending'
@@ -80,7 +80,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
                         plan_type: 'monthly',
                         status: 'pending',
                         activation_token: activationToken,
-                        amount: 5900, // €59 in centesimi
+                        amount: 3900, // €39 in centesimi
                         currency: 'eur'
                     }]);
 
@@ -94,7 +94,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ planName, price, onCanc
 
             // Payment Links Stripe (PRODUZIONE)
             const PAYMENT_LINKS: { [key: string]: string } = {
-                'Crypto Analyzer Pro': 'https://buy.stripe.com/3cIbJ388oeB43wb6jA5Ne06', // Mensile 59€
+                'Crypto Analyzer Pro': 'https://buy.stripe.com/cNi28t88o3Wq0jZeQ65Ne0b', // Mensile 39€
                 'BTC Trend Mensile': 'https://buy.stripe.com/fZu4gB1K0akOaYD8rI5Ne07',   // Mensile 29€
                 'BTC Trend Annuale': 'https://buy.stripe.com/dRm5kF3S8csW6InazQ5Ne08',   // Annuale 299€
             };

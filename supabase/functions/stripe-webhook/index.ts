@@ -2,8 +2,8 @@
 /**
  * stripe-webhook/index.ts - Webhook Stripe per Crypto Analyzer Pro
  * =================================================================
- * v16 - Aggiunta gestione scadenze abbonamenti + notifiche
- * 
+ * v18 - Aggiunta gestione scadenze abbonamenti + notifiche
+ *
  * Eventi gestiti:
  * - checkout.session.completed → Pagamento completato, salva expires_at
  * - invoice.paid → Rinnovo abbonamento, estende expires_at
@@ -37,10 +37,10 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABA
 
 // Product IDs validi per Crypto Analyzer (ignorare BTC Spot e altri)
 const ALLOWED_PRODUCT_IDS = [
-    'prod_TuoDbBPoQ0Lrvn', // Crypto Analyzer Pro - Standard
+    'prod_U0FWMjT0hTJyde', // Crypto Analyzer Pro €39/mese (ATTIVO)
+    'prod_TuoDbBPoQ0Lrvn', // Crypto Analyzer Pro - Standard (vecchio €59)
     'prod_TuoBNeViu26GBm', // Crypto Analyzer Pro - Early Bird
     'prod_TwNAWdsxQTRD4a', // Test Crypto Analyzer
-    // RIMOSSO prod_TwhMvbUdxnOGre (usato per test BTC Spot, non Crypto Analyzer)
 ];
 
 Deno.serve(async (req: Request) => {
@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
         logs.push(line);
     };
 
-    log('=== STRIPE WEBHOOK v17 (Product Filter) ===');
+    log('=== STRIPE WEBHOOK v18 (Product Filter) ===');
 
     // Endpoint di debug GET
     if (req.method === 'GET') {
