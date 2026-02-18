@@ -91,7 +91,7 @@ const ActivationForm: React.FC = () => {
 
           if (approvedPayment) {
             // Determina il tipo di piano
-            const planType = approvedPayment.piano.toLowerCase().includes('annuale') ? 'annual' : 'monthly';
+            const subscriptionType = approvedPayment.piano.toLowerCase().includes('annuale') ? 'annual' : 'monthly';
 
             // Crea record in richieste_attivazione
             const { data: newRequest, error: insertError } = await supabase
@@ -99,13 +99,15 @@ const ActivationForm: React.FC = () => {
               .insert([{
                 user_email: user.email,
                 plan: 'BTC Single',
-                plan_type: planType,
+                subscription_type: subscriptionType,
                 status: 'pending_config'
               }])
               .select('id')
               .single();
 
-            if (!insertError && newRequest) {
+            if (insertError) {
+              console.error('Errore creazione richiesta:', insertError);
+            } else if (newRequest) {
               setRequestId(newRequest.id);
             }
           }
