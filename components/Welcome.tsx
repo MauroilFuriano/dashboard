@@ -21,7 +21,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isStripeOpen, setIsStripeOpen] = useState(false);
-  const [stripeProduct, setStripeProduct] = useState<{ name: string; price: string }>({ name: 'Crypto Analyzer Pro', price: '59€' });
+  const [stripeProduct, setStripeProduct] = useState<{ name: string; price: string }>({ name: 'Crypto Analyzer Pro', price: '39€' });
   const [selectedProduct, setSelectedProduct] = useState<{ name: string, price: string, priceUSDC: string, type: 'SINGLE' | 'DUAL' | 'ANALYZER' }>({ name: '', price: '', priceUSDC: '', type: 'SINGLE' });
 
   // Funzione per aprire Stripe con prodotto specifico
@@ -252,14 +252,14 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
                 <div className="flex justify-between items-end border-t border-slate-800 pt-4">
                   <div className="text-xs text-slate-500 uppercase font-bold">Prezzo</div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-white">59€</span>
+                    <span className="text-2xl font-bold text-white">39€</span>
                     <span className="text-xs text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">Mensile</span>
                   </div>
                 </div>
 
                 {/* BOTTONE STRIPE - Verde Neon */}
                 <button
-                  onClick={() => openStripe('Crypto Analyzer Pro', '59€')}
+                  onClick={() => openStripe('Crypto Analyzer Pro', '39€')}
                   className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-emerald-400/40"
                   style={{ textShadow: '0 0 10px rgba(16, 185, 129, 0.3)' }}
                 >
@@ -268,7 +268,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext, onAuthRequired, isLoggedIn })
 
                 {/* BOTTONE CRYPTO - Verde Matrix Translucido */}
                 <button
-                  onClick={() => handleSelect('Crypto Analyzer Pro', '59€', '70', 'ANALYZER')}
+                  onClick={() => handleSelect('Crypto Analyzer Pro', '39€', '45', 'ANALYZER')}
                   className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl text-sm transition-all border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-center gap-2 backdrop-blur-sm"
                   style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }}
                 >
