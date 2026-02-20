@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Wallet, MessageSquare, Zap, X, Bot, LogOut, ExternalLink, Users, TrendingUp, Lock, LogIn, Cpu, Gift } from 'lucide-react';
+import { LayoutDashboard, Wallet, MessageSquare, Zap, X, Bot, LogOut, ExternalLink, Users, Lock, LogIn, Cpu, Gift } from 'lucide-react';
 import { Tab, NavigationItem } from '../types';
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
+import ProductInfoModal from './ProductInfoModal';
 
 interface SidebarProps {
   activeTab: Tab;
@@ -18,6 +19,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen, activePlan, isLoggedIn, onLoginClick }) => {
 
   const [shakingId, setShakingId] = useState<string | null>(null);
+  const [infoModal, setInfoModal] = useState<'analyzer' | 'bot' | null>(null);
 
   const menuItems: NavigationItem[] = [
     { id: Tab.WELCOME, label: 'Benvenuto', icon: LayoutDashboard },
@@ -156,8 +158,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
 
             <div className="px-3 space-y-3">
 
-              {/* 1. ANALYZER PRO - STILE NEON VERDE */}
-              <div className="relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group">
+              {/* 1. ANALYZER PRO - CLICCABILE */}
+              <button
+                onClick={() => setInfoModal('analyzer')}
+                className="w-full text-left relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group cursor-pointer"
+              >
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="p-1 bg-emerald-500/10 rounded-md text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"><Bot size={14} /></div>
@@ -166,11 +171,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                   <p className="text-[10px] text-slate-400 leading-relaxed">
                     Analisi istituzionale su <span className="text-emerald-400 font-medium">Telegram</span>.
                   </p>
+                  <p className="text-[9px] text-emerald-500/70 mt-1 group-hover:text-emerald-400 transition-colors">Clicca per info →</p>
                 </div>
-              </div>
+              </button>
 
-              {/* 2. BOT AUTOMATICI - MODIFICATO BITGET */}
-              <div className="relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group">
+              {/* 2. BOT AUTOMATICI - CLICCABILE */}
+              <button
+                onClick={() => setInfoModal('bot')}
+                className="w-full text-left relative overflow-hidden rounded-xl p-3 border border-emerald-500/30 bg-slate-900/50 shadow-[0_0_10px_rgba(16,185,129,0.05)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/60 transition-all group cursor-pointer"
+              >
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="p-1 bg-emerald-500/10 rounded-md text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"><Cpu size={14} /></div>
@@ -179,8 +188,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                   <p className="text-[10px] text-slate-400 leading-relaxed">
                     Bot automatici trading algoritmico 24 h su 24 su <span className="text-emerald-400 font-medium">Bitget</span>.
                   </p>
+                  <p className="text-[9px] text-emerald-500/70 mt-1 group-hover:text-emerald-400 transition-colors">Clicca per info →</p>
                 </div>
-              </div>
+              </button>
 
               {/* 3. CTA REGISTRAZIONE BITGET */}
               <a href="https://share.bitget.com/u/DRPUAUPG" target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl p-3 border border-orange-500/40 bg-gradient-to-r from-orange-500/10 to-amber-500/10 shadow-[0_0_10px_rgba(249,115,22,0.1)] hover:shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:border-orange-400/60 transition-all group">
@@ -224,6 +234,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
           )}
         </div>
       </aside>
+
+      {/* Modal Info Prodotti */}
+      <ProductInfoModal
+        isOpen={infoModal !== null}
+        onClose={() => setInfoModal(null)}
+        product={infoModal || 'analyzer'}
+      />
     </>
   );
 };
