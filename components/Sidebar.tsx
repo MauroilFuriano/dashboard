@@ -102,22 +102,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
             const isActive = activeTab === item.id;
             const isShaking = shakingId === item.id;
 
+            // ✅ LOGICA SEMPLIFICATA: Tutto sbloccato dopo login (migliora conversione)
+            // Solo Welcome è sempre accessibile, il resto richiede login
             let isLocked = false;
-            const plan = activePlan ? activePlan.toUpperCase() : "";
-
-            // ✅ MODIFICA: ANALYZER sempre accessibile per utenti autenticati (modalità FREEMIUM)
-            if (item.id !== Tab.WELCOME && item.id !== Tab.ANALYZER) {
-              if (!isLoggedIn) {
-                isLocked = true;
-              } else {
-                // Blocca solo le sezioni BOT (Exchange, Telegram, Activation) se non ha piano
-                if (['EXCHANGE', 'TELEGRAM', 'ACTIVATION'].includes(item.id)) {
-                  if (!plan.includes('BTC') && !plan.includes('DUAL') && !plan.includes('SINGLE')) isLocked = true;
-                }
-              }
-            }
-            // ANALYZER richiede solo login
-            if (item.id === Tab.ANALYZER && !isLoggedIn) {
+            if (item.id !== Tab.WELCOME && !isLoggedIn) {
               isLocked = true;
             }
 

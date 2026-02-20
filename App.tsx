@@ -349,7 +349,6 @@ const App: React.FC = () => {
           <MobileNav
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            activePlan={activePlan}
             isLoggedIn={!!session}
             onLoginClick={triggerLogin}
           />

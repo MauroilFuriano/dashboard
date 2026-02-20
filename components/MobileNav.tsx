@@ -5,12 +5,11 @@ import { Tab, NavigationItem } from '../types';
 interface MobileNavProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
-  activePlan: string | null;
   isLoggedIn: boolean;
   onLoginClick: () => void;
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, activePlan, isLoggedIn, onLoginClick }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, isLoggedIn, onLoginClick }) => {
 
   const menuItems: NavigationItem[] = [
     { id: Tab.WELCOME, label: 'Home', icon: LayoutDashboard },
@@ -27,20 +26,10 @@ const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, activePl
           const Icon = item.icon;
           const isActive = activeTab === item.id;
 
-          // --- LOGICA BLOCCO (Identica alla Sidebar) ---
-          const plan = activePlan ? activePlan.toUpperCase() : "";
+          // ✅ LOGICA SEMPLIFICATA: Tutto sbloccato dopo login (migliora conversione)
           let isLocked = false;
-
-          if (item.id !== Tab.WELCOME) {
-            if (!isLoggedIn) {
-              isLocked = true;
-            } else {
-              // ANALYZER: Sempre sbloccato se loggato (tab ANALYZER gestito qui implicitamente perché non rientra nell'else if sotto)
-
-              if (['EXCHANGE', 'TELEGRAM', 'ACTIVATION'].includes(item.id)) {
-                if (!plan.includes('BTC') && !plan.includes('DUAL') && !plan.includes('SINGLE')) isLocked = true;
-              }
-            }
+          if (item.id !== Tab.WELCOME && !isLoggedIn) {
+            isLocked = true;
           }
 
           return (
