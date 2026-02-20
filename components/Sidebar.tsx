@@ -192,17 +192,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen
                 </div>
               </button>
 
-              {/* 3. CTA REGISTRAZIONE BITGET */}
-              <a href="https://share.bitget.com/u/DRPUAUPG" target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl p-3 border border-orange-500/40 bg-gradient-to-r from-orange-500/10 to-amber-500/10 shadow-[0_0_10px_rgba(249,115,22,0.1)] hover:shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:border-orange-400/60 transition-all group">
+              {/* 3. CTA REGISTRAZIONE BITGET - Colore Bitget Cyan */}
+              <a href="https://share.bitget.com/u/DRPUAUPG" target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl p-3 border border-cyan-400/40 bg-gradient-to-r from-cyan-500/10 to-teal-500/10 shadow-[0_0_10px_rgba(0,240,255,0.1)] hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:border-cyan-400/60 transition-all group">
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className="p-1 bg-orange-500/20 rounded-md text-orange-400 drop-shadow-[0_0_5px_rgba(249,115,22,0.5)]"><Gift size={14} /></div>
-                      <span className="text-orange-300 font-bold text-xs tracking-wide">REGISTRATI SU BITGET</span>
+                      <div className="p-1 bg-cyan-500/20 rounded-md text-cyan-400 drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]"><Gift size={14} /></div>
+                      <span className="text-cyan-300 font-bold text-xs tracking-wide">REGISTRATI SU BITGET</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">Ottieni <span className="text-orange-400 font-bold">0,1% Fee</span> con il nostro link</p>
+                    <p className="text-[10px] text-slate-400 font-medium">Ottieni <span className="text-cyan-400 font-bold">0,1% Fee</span> con il nostro link</p>
                   </div>
-                  <div className="bg-orange-500/20 p-1.5 rounded-lg text-orange-400 group-hover:scale-110 transition-transform"><ExternalLink size={14} /></div>
+                  <div className="bg-cyan-500/20 p-1.5 rounded-lg text-cyan-400 group-hover:scale-110 transition-transform"><ExternalLink size={14} /></div>
                 </div>
               </a>
             </div>
