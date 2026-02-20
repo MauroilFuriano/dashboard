@@ -2,15 +2,17 @@
 /**
  * check-expiring-subscriptions/index.ts
  * ========================================
+ * v2 - Aggiunta notifica Telegram ai clienti
+ *
  * Edge Function schedulata (cron giornaliero) per verificare
  * abbonamenti in scadenza e inviare notifiche ai clienti.
- * 
+ *
  * Logica:
  * - 7 giorni prima: notifica "Il tuo abbonamento scade tra 7 giorni"
  * - 1 giorno prima: notifica "Il tuo abbonamento scade domani"
  * - Scaduto: segna come expired (→ FREEMIUM) e notifica
- * 
- * Canali: Telegram + Email (via Supabase Auth)
+ *
+ * Canali: Telegram (cliente + admin)
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -26,8 +28,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const ADMIN_CHAT_ID = Deno.env.get('ADMIN_CHAT_ID') || '5454410388';
 
-// Email del supporto per il footer delle notifiche
-const SUPPORT_EMAIL = 'support@cryptoanalyzerpro.com';
 const DASHBOARD_URL = 'https://dashboard.cryptoanalyzerpro.com';
 
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
         logs.push(line);
     };
 
-    log('=== CHECK EXPIRING SUBSCRIPTIONS ===');
+    log('=== CHECK EXPIRING SUBSCRIPTIONS v2 ===');
 
     if (!supabase) {
         return new Response(JSON.stringify({ error: 'Missing Supabase config' }), { status: 503 });
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
         // =================================================================
         const { data: expiredSubs, error: expError } = await supabase
             .from('stripe_payments')
-            .select('id, user_email, expires_at, plan_type')
+            .select('id, user_email, expires_at, plan_type, telegram_chat_id')
             .eq('status', 'completed')
             .not('expires_at', 'is', null)
             .lt('expires_at', now.toISOString())
@@ -88,8 +88,20 @@ Deno.serve(async (req: Request) => {
                     })
                     .eq('id', sub.id);
 
-                // Notifica cliente via Telegram (cerca chat_id in auth.users o pagamenti)
-                await notifyCustomerExpired(sub.user_email, log);
+                // Notifica cliente via Telegram (se ha chat_id)
+                if (sub.telegram_chat_id) {
+                    await sendTelegramCustomer(
+                        sub.telegram_chat_id,
+                        `🚫 *Abbonamento Scaduto*\n\n` +
+                        `Il tuo abbonamento a *Crypto Analyzer Pro* è scaduto.\n\n` +
+                        `Il tuo account è tornato in modalità *FREEMIUM* con funzionalità limitate.\n\n` +
+                        `👉 Rinnova su: ${DASHBOARD_URL}`,
+                        log
+                    );
+                    log(`Telegram sent to customer: ${sub.user_email}`);
+                } else {
+                    log(`No telegram_chat_id for ${sub.user_email} - skipping customer notification`);
+                }
 
                 // Notifica admin
                 await sendTelegramAdmin(
@@ -106,7 +118,7 @@ Deno.serve(async (req: Request) => {
         // =================================================================
         const { data: expiring1d, error: err1d } = await supabase
             .from('stripe_payments')
-            .select('id, user_email, expires_at, plan_type')
+            .select('id, user_email, expires_at, plan_type, telegram_chat_id')
             .eq('status', 'completed')
             .not('expires_at', 'is', null)
             .gt('expires_at', now.toISOString())
@@ -124,7 +136,18 @@ Deno.serve(async (req: Request) => {
                     .update({ notified_1d: true })
                     .eq('id', sub.id);
 
-                await notifyCustomerExpiring(sub.user_email, 1, log);
+                // Notifica cliente via Telegram
+                if (sub.telegram_chat_id) {
+                    await sendTelegramCustomer(
+                        sub.telegram_chat_id,
+                        `⚠️ *Scadenza Domani!*\n\n` +
+                        `Il tuo abbonamento a *Crypto Analyzer Pro* scade *domani*!\n\n` +
+                        `Se non rinnovi, tornerai in modalità FREEMIUM.\n\n` +
+                        `👉 Rinnova su: ${DASHBOARD_URL}`,
+                        log
+                    );
+                    log(`1-day warning sent to: ${sub.user_email}`);
+                }
 
                 await sendTelegramAdmin(
                     `⚠️ **SCADENZA DOMANI**\n\n👤 ${sub.user_email}\n📦 Piano: ${sub.plan_type || 'N/A'}\n⏰ Scade domani`,
@@ -140,7 +163,7 @@ Deno.serve(async (req: Request) => {
         // =================================================================
         const { data: expiring7d, error: err7d } = await supabase
             .from('stripe_payments')
-            .select('id, user_email, expires_at, plan_type')
+            .select('id, user_email, expires_at, plan_type, telegram_chat_id')
             .eq('status', 'completed')
             .not('expires_at', 'is', null)
             .gt('expires_at', in1day.toISOString())
@@ -162,7 +185,18 @@ Deno.serve(async (req: Request) => {
                     (new Date(sub.expires_at).getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
                 );
 
-                await notifyCustomerExpiring(sub.user_email, daysLeft, log);
+                // Notifica cliente via Telegram
+                if (sub.telegram_chat_id) {
+                    await sendTelegramCustomer(
+                        sub.telegram_chat_id,
+                        `📅 *Promemoria Scadenza*\n\n` +
+                        `Il tuo abbonamento a *Crypto Analyzer Pro* scade tra *${daysLeft} giorni*.\n\n` +
+                        `Ricordati di rinnovare per mantenere l'accesso PRO!\n\n` +
+                        `👉 Dashboard: ${DASHBOARD_URL}`,
+                        log
+                    );
+                    log(`7-day warning sent to: ${sub.user_email}`);
+                }
 
                 notified7d++;
             }
@@ -173,7 +207,7 @@ Deno.serve(async (req: Request) => {
 
         // Salva log nel DB
         await supabase.from('webhook_debug_logs').insert([{
-            logs: `[CRON] ${logs.join('\n')}`
+            logs: `[CRON v2] ${logs.join('\n')}`
         }]).catch(() => { });
 
         return new Response(JSON.stringify({
@@ -198,91 +232,42 @@ Deno.serve(async (req: Request) => {
 
 
 // =============================================================================
-// NOTIFICHE CLIENTE
+// TELEGRAM - NOTIFICHE CLIENTE
 // =============================================================================
 
 /**
- * Notifica al cliente che il suo abbonamento sta per scadere.
- * Invia email tramite Supabase Auth (magic link pattern) + Telegram se disponibile.
+ * Invia notifica Telegram al cliente
  */
-async function notifyCustomerExpiring(email: string, daysLeft: number, log: any) {
-    // --- EMAIL via Supabase Edge Function (invio diretto con fetch) ---
+async function sendTelegramCustomer(chatId: string, text: string, log: any) {
+    if (!TELEGRAM_BOT_TOKEN || !chatId) {
+        log('WARNING: Missing bot token or chat_id for customer notification');
+        return false;
+    }
     try {
-        // Usa Supabase per inviare email tramite il template personalizzato
-        const subject = daysLeft === 1
-            ? '⚠️ Il tuo abbonamento Crypto Analyzer Pro scade domani!'
-            : `📅 Il tuo abbonamento scade tra ${daysLeft} giorni`;
-
-        const htmlBody = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 12px; padding: 30px; color: white;">
-                    <h2 style="color: #34d399; margin-top: 0;">⏰ Abbonamento in Scadenza</h2>
-                    <p>Ciao,</p>
-                    <p>Il tuo abbonamento a <strong>Crypto Analyzer Pro</strong> scade tra <strong>${daysLeft} ${daysLeft === 1 ? 'giorno' : 'giorni'}</strong>.</p>
-                    <p>Per continuare ad utilizzare tutte le funzionalità PRO (analisi illimitate, Vision AI, whale alerts, CryptoGPT), rinnova il tuo abbonamento.</p>
-                    <div style="text-align: center; margin: 25px 0;">
-                        <a href="${DASHBOARD_URL}" style="background: #10b981; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                            🚀 Rinnova Ora
-                        </a>
-                    </div>
-                    <p style="color: #94a3b8; font-size: 13px;">Se non rinnovi, il tuo account tornerà alla modalità FREEMIUM con funzionalità limitate.</p>
-                </div>
-                <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 15px;">
-                    Crypto Analyzer Pro | ${SUPPORT_EMAIL}
-                </p>
-            </div>
-        `;
-
-        // Invia email tramite Resend/SMTP via Supabase (se configurato)
-        // Per ora logga che dovrebbe essere inviata
-        log(`📧 Email notification queued for ${email}: "${subject}"`);
-
-        // Prova a inviare via Supabase Auth password reset come workaround
-        // oppure direttamente se c'è un servizio SMTP configurato
-        // Per ora salviamo che la notifica è stata "inviata" (il log farà da tracker)
-
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: text,
+                parse_mode: 'Markdown',
+                disable_web_page_preview: true
+            })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            log(`Telegram customer notification sent to ${chatId}`);
+            return true;
+        } else {
+            log(`Telegram Customer Error: ${JSON.stringify(data)}`);
+            return false;
+        }
     } catch (e: any) {
-        log(`Email notification error for ${email}: ${e.message}`);
+        log(`Telegram Customer Exception: ${e.message}`);
+        return false;
     }
 }
-
-/**
- * Notifica al cliente che il suo abbonamento è scaduto → FREEMIUM
- */
-async function notifyCustomerExpired(email: string, log: any) {
-    try {
-        const subject = '🚫 Abbonamento Crypto Analyzer Pro Scaduto';
-        const htmlBody = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 12px; padding: 30px; color: white;">
-                    <h2 style="color: #f59e0b; margin-top: 0;">🚫 Abbonamento Scaduto</h2>
-                    <p>Ciao,</p>
-                    <p>Il tuo abbonamento a <strong>Crypto Analyzer Pro</strong> è scaduto.</p>
-                    <p>Il tuo account è tornato alla modalità <strong style="color: #94a3b8;">FREEMIUM</strong>. Puoi continuare ad usare le funzionalità base, ma le analisi illimitate, Vision AI e CryptoGPT non sono più disponibili.</p>
-                    <div style="text-align: center; margin: 25px 0;">
-                        <a href="${DASHBOARD_URL}" style="background: #f59e0b; color: #0f172a; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                            ⚡ Riattiva PRO
-                        </a>
-                    </div>
-                    <p style="color: #94a3b8; font-size: 13px;">Rinnova per ripristinare immediatamente tutte le funzionalità premium.</p>
-                </div>
-                <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 15px;">
-                    Crypto Analyzer Pro | ${SUPPORT_EMAIL}
-                </p>
-            </div>
-        `;
-
-        log(`📧 Expiration email queued for ${email}: "${subject}"`);
-
-    } catch (e: any) {
-        log(`Email expired notification error for ${email}: ${e.message}`);
-    }
-}
-
-
-// =============================================================================
-// TELEGRAM
-// =============================================================================
 
 /**
  * Invia notifica Telegram all'admin
